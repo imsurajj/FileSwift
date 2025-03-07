@@ -15,7 +15,10 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const fileName = await saveTempFile(buffer, file.name);
-    const fileUrl = `${process.env.NEXT_PUBLIC_APP_URL}/download/${encodeURIComponent(fileName)}`;
+    
+    // Get the base URL from environment variable or construct it from the request
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const fileUrl = `${baseUrl}/download/${encodeURIComponent(fileName)}`;
     
     return NextResponse.json({ 
       url: fileUrl,

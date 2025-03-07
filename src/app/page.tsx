@@ -13,51 +13,58 @@ function FileUpload() {
   const [copied, setCopied] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      setUploading(true)
-      
-      const formData = new FormData()
-      formData.append('file', selectedFile)
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
-      try {
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-        
-        const data = await response.json()
-        console.log('Upload successful, URL:', data.url)
-        setShareUrl(data.url)
-        setOriginalName(data.originalName || selectedFile.name)
-      } catch (error) {
-        console.error('Upload failed:', error)
-        alert('Upload failed. Please try again.')
-      } finally {
-        setUploading(false)
-      }
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      setFile(droppedFile);
+      const formData = new FormData();
+      formData.append('file', droppedFile);
+      handleUpload(formData);
     }
-  }
+  };
+
+  const handleUpload = async (formData: FormData) => {
+    setUploading(true);
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await response.json();
+      console.log('Upload successful, URL:', data.url);
+      setShareUrl(data.url);
+      const file = formData.get('file') as File;
+      setOriginalName(data.originalName || file.name);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      handleUpload(formData);
+    }
+  };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile) {
-      setFile(droppedFile)
-      handleFileSelect({ target: { files: [droppedFile] } } as unknown as React.ChangeEvent<HTMLInputElement>)
-    }
   }
 
   const resetShare = () => {
@@ -112,10 +119,13 @@ function FileUpload() {
               ref={fileInputRef}
               onChange={handleFileSelect}
               className="hidden"
+              accept="*/*"
+              capture="environment"
             />
             <div
               className="w-full h-64 border-2 border-dashed border-blue-400/50 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-600/50 hover:bg-blue-50/50 transition-all duration-300"
               onClick={() => fileInputRef.current?.click()}
+              onTouchEnd={() => fileInputRef.current?.click()}
             >
               <motion.div
                 initial={{ scale: 0.9 }}
