@@ -59,6 +59,15 @@ export default function Navbar() {
             <motion.div
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <Link href="/changelog" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
+                Changelog
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.5 }}
               whileHover={{ scale: 1.05 }}
             >
@@ -119,6 +128,12 @@ export default function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               Help & Support
+            </Link>
+            <Link href="/changelog" 
+              className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Changelog
             </Link>
             <a 
               href="https://github.com" 
