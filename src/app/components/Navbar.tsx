@@ -52,17 +52,8 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.3 }}
             >
-              <Link href="/?tab=send" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
-                Send Files
-              </Link>
-            </motion.div>
-            <motion.div
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              <Link href="/?tab=receive" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
-                Receive Files
+              <Link href="/help" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
+                Help & Support
               </Link>
             </motion.div>
             <motion.div
@@ -123,17 +114,11 @@ export default function Navbar() {
             >
               Home
             </Link>
-            <Link href="/?tab=send" 
+            <Link href="/help" 
               className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Send Files
-            </Link>
-            <Link href="/?tab=receive" 
-              className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Receive Files
+              Help & Support
             </Link>
             <a 
               href="https://github.com" 

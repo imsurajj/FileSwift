@@ -410,33 +410,33 @@ function FileTransfer() {
                 transition={{ duration: 0.3 }}
                 className="max-w-4xl mx-auto"
               >
-                <motion.div
+          <motion.div
                   className="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-xl border border-white/20"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                >
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
                   <div className="flex justify-center">
                     <div className="w-full max-w-md">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        accept="*/*"
-                        capture="environment"
-                      />
-                      <div
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              className="hidden"
+              accept="*/*"
+              capture="environment"
+            />
+            <div
                         className="w-full h-64 border-2 border-dashed border-purple-400/50 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-600/50 hover:bg-purple-50/50 transition-all duration-300"
-                        onClick={() => fileInputRef.current?.click()}
-                        onTouchEnd={() => fileInputRef.current?.click()}
+              onClick={() => fileInputRef.current?.click()}
+              onTouchEnd={() => fileInputRef.current?.click()}
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
-                      >
-                        <motion.div
-                          initial={{ scale: 0.9 }}
-                          animate={{ scale: 1 }}
-                          transition={{ duration: 0.2 }}
+            >
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.2 }}
                           className="text-center p-4"
                         >
                           {uploading ? (
@@ -447,17 +447,17 @@ function FileTransfer() {
                             <>
                               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3 3m0 0l-3-3m3 3V8" />
-                                </svg>
-                              </div>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3 3m0 0l-3-3m3 3V8" />
+                  </svg>
+                </div>
                               <span className="text-xl text-gray-600 font-medium">
-                                {file ? file.name : 'Click to upload or drag and drop'}
-                              </span>
-                              {!file && (
-                                <p className="text-sm text-gray-500 mt-2">
-                                  Your files are automatically deleted after download
-                                </p>
-                              )}
+                  {file ? file.name : 'Click to upload or drag and drop'}
+                </span>
+                {!file && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Your files are automatically deleted after download
+                  </p>
+                )}
                             </>
                           )}
                         </motion.div>
@@ -542,8 +542,8 @@ function FileTransfer() {
                       <div className="p-6 bg-white rounded-xl shadow-sm mx-auto w-full relative">
                         <div className={`${!receiveSession ? 'blur-[2px] filter' : ''} transition-all duration-300`}>
                           <QRCode value={receiveUrl || 'https://example.com'} size={192} className="mx-auto" />
-                        </div>
-                        
+            </div>
+
                         {!receiveSession && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="bg-blue-50/60 backdrop-blur-[2px] rounded-xl w-full h-full"></div>
@@ -707,8 +707,8 @@ function FileTransfer() {
                           )}
                         </div>
                       )}
-                    </div>
-                  </div>
+                </div>
+              </div>
                   
                   <p className="text-gray-600 mt-6 text-center">
                     {!receiveSession 
@@ -775,10 +775,10 @@ function FileTransfer() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <a
-                    href={shareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <a
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                     className="py-3 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-center shadow-sm flex items-center justify-center"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -816,13 +816,13 @@ function Footer() {
       className="py-6 px-4 text-center text-sm text-gray-500 bg-white/50 backdrop-blur-sm border-t border-gray-100 mt-auto"
     >
       <div className="container mx-auto">
-        <motion.div
-          initial={{ scale: 1 }}
-          whileHover={{ scale: 1.02 }}
-          className="inline-flex items-center gap-1"
-        >
+      <motion.div
+        initial={{ scale: 1 }}
+        whileHover={{ scale: 1.02 }}
+        className="inline-flex items-center gap-1"
+      >
           <a href="/" className="text-purple-600 hover:text-purple-700 transition-colors">FileSwift</a> • Built with <span className="text-red-500">♥</span> using Next.js
-        </motion.div>
+      </motion.div>
       </div>
     </motion.footer>
   )
