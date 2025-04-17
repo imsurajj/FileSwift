@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { activeSessions } from '../../route';
+import { activeSessions, removeSession } from '@/utils/receiveSessionStorage';
 import { clearReceivedFiles } from '@/utils/receiveStorage';
 
 export async function POST(
@@ -17,16 +17,15 @@ export async function POST(
       );
     }
     
-    // Close the session by removing it from active sessions
-    delete activeSessions[sessionId];
+    // Close the session
+    removeSession(sessionId);
     
-    // In a production app, you might want to keep the files
-    // But for demo purposes, we'll clear them
-    // clearReceivedFiles(sessionId);
+    // Clear stored files
+    clearReceivedFiles(sessionId);
     
     return NextResponse.json({ 
       success: true,
-      message: 'Receive session closed successfully'
+      message: 'Receive session closed'
     });
   } catch (error) {
     console.error('Close session error:', error);

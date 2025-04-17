@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
-
-// Store active receive sessions in memory
-// In a production app, you would use a database
-const activeSessions: Record<string, { createdAt: number }> = {};
+import { activeSessions, registerSession } from '@/utils/receiveSessionStorage';
 
 // Clean up old sessions (older than 1 hour)
 const HOUR_MS = 60 * 60 * 1000;
@@ -22,9 +19,7 @@ export async function POST(request: NextRequest) {
     const sessionId = nanoid(10);
     
     // Record the session
-    activeSessions[sessionId] = {
-      createdAt: Date.now()
-    };
+    registerSession(sessionId);
     
     // Get the base URL from environment variable or construct it from the request
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
@@ -45,7 +40,4 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return new Response('Method not allowed', { status: 405 });
-}
-
-// Export the sessions object for use in other routes
-export { activeSessions }; 
+} 

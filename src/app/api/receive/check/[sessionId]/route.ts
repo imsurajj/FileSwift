@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { activeSessions } from '../../route';
+import { activeSessions } from '@/utils/receiveSessionStorage';
 import { getReceivedFiles } from '@/utils/receiveStorage';
 
 export async function GET(

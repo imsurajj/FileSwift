@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveTempFile } from '@/utils/tempStorage';
-import { activeSessions } from '../route';
+import { activeSessions } from '@/utils/receiveSessionStorage';
 import { storeReceivedFile } from '@/utils/receiveStorage';
 
 export async function POST(
