@@ -81,6 +81,30 @@ export const getTempFile = async (fileName: string): Promise<{ buffer: Buffer; o
   return { buffer, originalName, filePath };
 };
 
+export const getTempFileInfo = async (fileName: string): Promise<{ originalName: string; size: number }> => {
+  const filePath = path.join(TEMP_DIR, fileName);
+  const metadataPath = filePath + '.json';
+  
+  if (!fs.existsSync(filePath)) {
+    throw new Error('File not found');
+  }
+  
+  // Read metadata
+  let originalName = fileName;
+  try {
+    const metadata = JSON.parse(await fs.promises.readFile(metadataPath, 'utf-8'));
+    originalName = metadata.originalName;
+  } catch (error) {
+    console.error('Error reading metadata:', error);
+  }
+  
+  // Get file stats for size
+  const stats = await fs.promises.stat(filePath);
+  const size = stats.size;
+  
+  return { originalName, size };
+};
+
 export const deleteTempFile = async (fileName: string): Promise<void> => {
   const filePath = path.join(TEMP_DIR, fileName);
   const metadataPath = filePath + '.json';
