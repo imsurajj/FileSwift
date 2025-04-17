@@ -25,11 +25,15 @@ export const sessionExists = (sessionId: string): boolean => {
 
 // Clean up old sessions (older than 1 hour)
 const HOUR_MS = 60 * 60 * 1000;
-setInterval(() => {
-  const now = Date.now();
-  Object.keys(activeSessions).forEach(key => {
-    if (now - activeSessions[key].createdAt > HOUR_MS) {
-      delete activeSessions[key];
-    }
-  });
-}, HOUR_MS); 
+
+// Only run cleanup interval on the server - not during prerendering
+if (typeof window === 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    Object.keys(activeSessions).forEach(key => {
+      if (now - activeSessions[key].createdAt > HOUR_MS) {
+        delete activeSessions[key];
+      }
+    });
+  }, HOUR_MS);
+} 

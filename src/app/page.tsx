@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QRCode from 'react-qr-code'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -16,6 +16,21 @@ interface ReceivedFile {
   fileName: string;
   url: string;
   timestamp: string;
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-purple-500 border-r-2 border-purple-500 border-b-2 border-transparent"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <FileTransfer />
+    </Suspense>
+  )
 }
 
 function FileTransfer() {
@@ -65,15 +80,21 @@ function FileTransfer() {
 
   // Load received files from local storage on component mount
   useEffect(() => {
-    const storedFiles = localStorage.getItem('receivedFiles')
-    if (storedFiles) {
-      setReceivedFiles(JSON.parse(storedFiles))
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const storedFiles = localStorage.getItem('receivedFiles')
+      if (storedFiles) {
+        setReceivedFiles(JSON.parse(storedFiles))
+      }
     }
   }, [])
 
   // Save received files to local storage when they change
   useEffect(() => {
-    localStorage.setItem('receivedFiles', JSON.stringify(receivedFiles))
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('receivedFiles', JSON.stringify(receivedFiles))
+    }
   }, [receivedFiles])
 
   // Poll for new files when a receive session is active
@@ -805,8 +826,4 @@ function Footer() {
       </div>
     </motion.footer>
   )
-}
-
-export default function Home() {
-  return <FileTransfer />
 }

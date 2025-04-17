@@ -35,8 +35,10 @@ const cleanupOldFiles = () => {
   });
 };
 
-// Run cleanup every hour
-setInterval(cleanupOldFiles, 60 * 60 * 1000);
+// Run cleanup every hour, but only on the server - not during prerendering
+if (typeof window === 'undefined') {
+  setInterval(cleanupOldFiles, 60 * 60 * 1000);
+}
 
 export const saveTempFile = async (file: Buffer, originalName: string): Promise<string> => {
   const fileId = nanoid();
