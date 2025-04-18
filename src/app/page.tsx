@@ -9,7 +9,26 @@ import FileItem from './components/FileItem'
 import LoadingOverlay from './components/LoadingOverlay'
 import Navbar from './components/Navbar'
 import ToggleSwitch from './components/ToggleSwitch'
+import PreviewModal from './components/PreviewModal'
 import { useSearchParams, useRouter } from 'next/navigation'
+
+// List of all previewable file extensions
+const PREVIEWABLE_EXTENSIONS = [
+  // Images
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.tif',
+  // Documents
+  '.pdf', '.ppt', '.pptx', '.doc', '.docx', '.rtf', '.xls', '.xlsx', '.csv',
+  '.odt', '.ods', '.odp', '.odg', '.odf', // Open Document formats
+  // Text and code
+  '.txt', '.md', '.html', '.htm', '.css', '.json', '.xml', '.csv', '.log',
+  '.js', '.jsx', '.ts', '.tsx', '.py', '.rb', '.java', '.c', '.cpp', '.cs', '.go', '.php', '.swift', '.yaml', '.yml',
+  // Media
+  '.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', 
+  '.mp3', '.wav', '.ogg', '.aac', '.flac',
+  // Other common formats
+  '.zip', '.rar', '.7z', '.tar', '.gz'
+];
+
 // Define types for received files
 interface ReceivedFile {
   fileName: string;
@@ -55,6 +74,9 @@ function FileTransfer() {
     message: string;
     isVisible: boolean;
   }>({ type: 'info', message: '', isVisible: false })
+  const [isPreviewable, setIsPreviewable] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -197,6 +219,21 @@ function FileTransfer() {
       setShareUrl(data.url)
       const file = formData.get('file') as File
       setOriginalName(data.originalName || file.name)
+      
+      // Check if file is previewable based on extension
+      const extension = file.name.split('.').pop()?.toLowerCase() || '';
+      const previewable = PREVIEWABLE_EXTENSIONS.some(ext => 
+        `.${extension}` === ext || extension === ext.substring(1)
+      )
+      setIsPreviewable(previewable)
+      
+      // Set the preview URL (convert from download URL to preview URL)
+      if (previewable) {
+        // Extract the key from the share URL
+        const urlParts = data.url.split('/')
+        const key = urlParts[urlParts.length - 1]
+        setPreviewUrl(`/api/download/${key}/preview`)
+      }
       
       showNotification('success', 'File uploaded successfully!')
     } catch (error) {
@@ -756,6 +793,19 @@ function FileTransfer() {
                 <div className="mb-4 p-4 bg-white rounded-xl shadow-sm">
                   <QRCode value={shareUrl} size={160} className="mx-auto mb-4" />
                   <p className="text-sm text-gray-500">Scan to download</p>
+                  
+                  {isPreviewable && (
+                    <button 
+                      onClick={() => setShowPreview(true)}
+                      className="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors w-full flex items-center justify-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Preview File
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 bg-white p-2 rounded-lg mb-4 shadow-sm">
@@ -800,6 +850,16 @@ function FileTransfer() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Preview Modal */}
+      {isPreviewable && (
+        <PreviewModal 
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          fileName={originalName}
+          url={previewUrl}
+        />
+      )}
     </div>
   )
 }

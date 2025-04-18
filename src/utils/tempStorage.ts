@@ -40,6 +40,23 @@ if (typeof window === 'undefined') {
   setInterval(cleanupOldFiles, 60 * 60 * 1000);
 }
 
+// List of all previewable file extensions
+const ALL_PREVIEWABLE = [
+  // Images
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.tif',
+  // Documents
+  '.pdf', '.ppt', '.pptx', '.doc', '.docx', '.rtf', '.xls', '.xlsx', '.csv',
+  '.odt', '.ods', '.odp', '.odg', '.odf', // Open Document formats
+  // Text and code
+  '.txt', '.md', '.html', '.htm', '.css', '.json', '.xml', '.csv', '.log',
+  '.js', '.jsx', '.ts', '.tsx', '.py', '.rb', '.java', '.c', '.cpp', '.cs', '.go', '.php', '.swift', '.yaml', '.yml',
+  // Media
+  '.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', 
+  '.mp3', '.wav', '.ogg', '.aac', '.flac',
+  // Other common formats
+  '.zip', '.rar', '.7z', '.tar', '.gz'
+];
+
 export const saveTempFile = async (file: Buffer, originalName: string): Promise<string> => {
   const fileId = nanoid();
   const fileExtension = path.extname(originalName);
@@ -83,7 +100,7 @@ export const getTempFile = async (fileName: string): Promise<{ buffer: Buffer; o
   return { buffer, originalName, filePath };
 };
 
-export const getTempFileInfo = async (fileName: string): Promise<{ originalName: string; size: number }> => {
+export const getTempFileInfo = async (fileName: string): Promise<{ originalName: string; size: number; previewable: boolean }> => {
   const filePath = path.join(TEMP_DIR, fileName);
   const metadataPath = filePath + '.json';
   
@@ -104,7 +121,11 @@ export const getTempFileInfo = async (fileName: string): Promise<{ originalName:
   const stats = await fs.promises.stat(filePath);
   const size = stats.size;
   
-  return { originalName, size };
+  // Check if the file is previewable based on extension
+  const extension = path.extname(originalName).toLowerCase();
+  const previewable = ALL_PREVIEWABLE.includes(extension);
+  
+  return { originalName, size, previewable };
 };
 
 export const deleteTempFile = async (fileName: string): Promise<void> => {
