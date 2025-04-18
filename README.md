@@ -1,6 +1,7 @@
-# FileSwift - Instant File Sharing
+# 🚀 FileSwift v1.0.0 - Instant File Sharing Made Beautiful ✨
 
-![FileSwift Logo](public/logo.png)
+
+![FileSwift Logo](https://github.com/imsurajj/FileSwift/raw/main/public/logo.png)
 
 FileSwift is a modern, serverless file sharing application that allows users to quickly share files with anyone through unique links and QR codes. No login or account creation required - just upload and share.
 
