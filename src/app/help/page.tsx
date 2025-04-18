@@ -104,7 +104,7 @@ export default function HelpPage() {
                   <div>
                     <p className="text-sm font-medium text-purple-700 mb-1">Email Us</p>
                     <a href="mailto:support@fileswift.app" className="text-purple-900 font-semibold hover:text-purple-600 transition-colors">
-                      support@fileswift.app
+                      Email Updating Soon..
                     </a>
                   </div>
                 </div>
