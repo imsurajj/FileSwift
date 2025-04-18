@@ -150,7 +150,7 @@ export async function GET(
     }
 
     // Add appropriate headers based on file type
-    let headers = {
+    let headers: Record<string, string> = {
       'Content-Type': contentType,
       'Cache-Control': 'no-store',
       // Add CORS headers to support preview in browser

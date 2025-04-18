@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
@@ -15,6 +15,34 @@ export default function PreviewModal({ isOpen, onClose, fileName, url }: Preview
   const [loading, setLoading] = useState(true);
   const [fileType, setFileType] = useState<'image' | 'pdf' | 'ppt' | 'doc' | 'excel' | 'txt' | 'code' | 'video' | 'audio' | 'archive' | 'unknown'>('unknown');
   const [error, setError] = useState('');
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  
+  // Function to determine file type based on extension
+  const getFileType = (extension: string) => {
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif'].includes(extension)) {
+      return 'image';
+    } else if (['pdf'].includes(extension)) {
+      return 'pdf';
+    } else if (['ppt', 'pptx'].includes(extension)) {
+      return 'ppt';
+    } else if (['doc', 'docx', 'rtf', 'odt'].includes(extension)) {
+      return 'doc';
+    } else if (['xls', 'xlsx', 'csv', 'ods'].includes(extension)) {
+      return 'excel';
+    } else if (['txt', 'log'].includes(extension)) {
+      return 'txt';
+    } else if (['js', 'jsx', 'ts', 'tsx', 'html', 'htm', 'css', 'json', 'xml', 'md', 'py', 'rb', 'java', 'c', 'cpp', 'cs', 'go', 'php', 'swift', 'yaml', 'yml'].includes(extension)) {
+      return 'code';
+    } else if (['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv'].includes(extension)) {
+      return 'video';
+    } else if (['mp3', 'wav', 'ogg', 'aac', 'flac'].includes(extension)) {
+      return 'audio';
+    } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) {
+      return 'archive';
+    } else {
+      return 'unknown';
+    }
+  };
   
   useEffect(() => {
     if (isOpen) {
@@ -24,39 +52,13 @@ export default function PreviewModal({ isOpen, onClose, fileName, url }: Preview
       
       // Determine file type based on the extension
       const extension = fileName.split('.').pop()?.toLowerCase() || '';
+      const type = getFileType(extension);
+      setFileType(type);
       
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif'].includes(extension)) {
-        setFileType('image');
-      } else if (['pdf'].includes(extension)) {
-        setFileType('pdf');
-      } else if (['ppt', 'pptx'].includes(extension)) {
-        setFileType('ppt');
-        // Set loading to false after a short delay for PowerPoint files
-        setTimeout(() => setLoading(false), 800);
-      } else if (['doc', 'docx', 'rtf', 'odt'].includes(extension)) {
-        setFileType('doc');
-        // Set loading to false after a short delay for Word files
-        setTimeout(() => setLoading(false), 800);
-      } else if (['xls', 'xlsx', 'csv', 'ods'].includes(extension)) {
-        setFileType('excel');
-        // Set loading to false after a short delay for Excel files
-        setTimeout(() => setLoading(false), 800);
-      } else if (['txt', 'log'].includes(extension)) {
-        setFileType('txt');
-      } else if (['js', 'jsx', 'ts', 'tsx', 'html', 'htm', 'css', 'json', 'xml', 'md', 'py', 'rb', 'java', 'c', 'cpp', 'cs', 'go', 'php', 'swift', 'yaml', 'yml'].includes(extension)) {
-        setFileType('code');
-      } else if (['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv'].includes(extension)) {
-        setFileType('video');
-      } else if (['mp3', 'wav', 'ogg', 'aac', 'flac'].includes(extension)) {
-        setFileType('audio');
-      } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) {
-        setFileType('archive');
-        // Set loading to false for archive files
-        setTimeout(() => setLoading(false), 800);
-      } else {
-        setFileType('unknown');
-        // Set loading to false after a short delay for unknown files
-        setTimeout(() => setLoading(false), 800);
+      // Set loading to false for non-streaming content types after a delay
+      if (['doc', 'excel', 'ppt', 'archive', 'unknown'].includes(type)) {
+        const timer = setTimeout(() => setLoading(false), 800);
+        return () => clearTimeout(timer);
       }
     }
   }, [isOpen, fileName]);
@@ -70,6 +72,17 @@ export default function PreviewModal({ isOpen, onClose, fileName, url }: Preview
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
+
+  // Handle iframe loads
+  const handleIframeLoad = () => {
+    setLoading(false);
+  };
+
+  // Handle iframe errors
+  const handleIframeError = (fileType: string) => {
+    setLoading(false);
+    setError(`Failed to load ${fileType} preview`);
+  };
 
   if (!isOpen) return null;
 
@@ -224,30 +237,30 @@ export default function PreviewModal({ isOpen, onClose, fileName, url }: Preview
               {/* Text preview for plain text files */}
               {fileType === 'txt' && (
                 <div className={`w-full max-w-3xl p-4 bg-white rounded-lg shadow h-[50vh] sm:h-[70vh] overflow-auto ${loading || error ? 'hidden' : ''}`}>
-                  <iframe 
-                    src={url} 
-                    className="w-full h-full border-0"
-                    onLoad={() => setLoading(false)}
-                    onError={() => {
-                      setLoading(false);
-                      setError('Failed to load text preview');
-                    }}
-                  ></iframe>
+                  {typeof window !== 'undefined' && (
+                    <iframe 
+                      ref={iframeRef}
+                      src={url} 
+                      className="w-full h-full border-0"
+                      onLoad={handleIframeLoad}
+                      onError={() => handleIframeError('text')}
+                    ></iframe>
+                  )}
                 </div>
               )}
               
               {/* Code preview */}
               {fileType === 'code' && (
                 <div className={`w-full max-w-3xl p-4 bg-white rounded-lg shadow h-[50vh] sm:h-[70vh] overflow-auto ${loading || error ? 'hidden' : ''}`}>
-                  <iframe 
-                    src={url} 
-                    className="w-full h-full border-0"
-                    onLoad={() => setLoading(false)}
-                    onError={() => {
-                      setLoading(false);
-                      setError('Failed to load code preview');
-                    }}
-                  ></iframe>
+                  {typeof window !== 'undefined' && (
+                    <iframe 
+                      ref={iframeRef}
+                      src={url} 
+                      className="w-full h-full border-0"
+                      onLoad={handleIframeLoad}
+                      onError={() => handleIframeError('code')}
+                    ></iframe>
+                  )}
                 </div>
               )}
               

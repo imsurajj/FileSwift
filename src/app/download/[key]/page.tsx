@@ -251,9 +251,9 @@ export default function DownloadPage({ params }: { params: { key: string } }) {
           </div>
         </motion.footer>
       </div>
-      
-      {/* Preview Modal */}
-      <PreviewModal 
+
+      {/* File Preview Modal */}
+      <PreviewModal
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
         fileName={originalFileName}
