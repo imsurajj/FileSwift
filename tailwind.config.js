@@ -11,11 +11,16 @@ module.exports = {
         shimmer: {
           '0%, 100%': { transform: 'translateX(-100%)' },
           '33%': { transform: 'translateX(100%)' }
+        },
+        shine: {
+          '0%': { left: '-100%' },
+          '100%': { left: '200%' }
         }
       },
       animation: {
         shimmer: 'shimmer 5s ease-in-out infinite',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'shine': 'shine 2s ease-in-out infinite'
       }
     },
   },

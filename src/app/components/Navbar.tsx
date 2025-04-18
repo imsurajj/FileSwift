@@ -1,13 +1,87 @@
+'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+
+// Developer settings
+const ENABLE_AUTH = false; // Toggle this to enable/disable authentication functionality
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const profileHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // For developer mode
+  const authStatus = ENABLE_AUTH ? status : (session ? 'authenticated' : 'unauthenticated');
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+
+  const closeProfileMenu = () => {
+    setShowProfileMenu(false);
+  };
+  
+  // Handle hover for profile menu
+  const handleProfileMouseEnter = () => {
+    if (profileHoverTimeoutRef.current) {
+      clearTimeout(profileHoverTimeoutRef.current);
+      profileHoverTimeoutRef.current = null;
+    }
+    setShowProfileMenu(true);
+  };
+
+  const handleProfileMouseLeave = () => {
+    profileHoverTimeoutRef.current = setTimeout(() => {
+      setShowProfileMenu(false);
+    }, 300);
+  };
+
+  // Handle authentication (with developer toggle)
+  const handleSignOut = () => {
+    if (ENABLE_AUTH) {
+      signOut({ callbackUrl: '/' });
+    }
+    setShowProfileMenu(false);
+  };
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        profileMenuRef.current && 
+        profileButtonRef.current && 
+        !profileMenuRef.current.contains(event.target as Node) && 
+        !profileButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowProfileMenu(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (profileHoverTimeoutRef.current) {
+        clearTimeout(profileHoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Variants for hamburger menu animation
   const topLineVariants = {
@@ -25,6 +99,13 @@ export default function Navbar() {
     open: { rotate: -45, translateY: -7 }
   };
 
+  // Styles for disabled auth elements
+  const disabledAuthStyle = !ENABLE_AUTH ? { 
+    opacity: 0.6, 
+    cursor: 'not-allowed',
+    position: 'relative' as const
+  } : {};
+
   return (
     <motion.header 
       initial={{ y: -20, opacity: 0 }}
@@ -41,6 +122,13 @@ export default function Navbar() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Link href="/" className="flex-shrink-0 flex items-center">
+              <Image 
+                src="/favicon.svg" 
+                alt="FileSwift Logo" 
+                width={32} 
+                height={32} 
+                className="mr-2"
+              />
               <span className="text-2xl font-bold tracking-tight text-gray-900">
                 File<span className="text-purple-600">Swift</span>
               </span>
@@ -49,7 +137,7 @@ export default function Navbar() {
 
           {/* Desktop menu */}
           <motion.nav 
-            className="hidden md:flex space-x-8 items-center"
+            className="hidden md:flex space-x-4 items-center"
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -59,7 +147,7 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.2 }}
             >
-              <Link href="/" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
+              <Link href="/" className="text-gray-500 hover:text-purple-600 px-2 py-2 text-sm font-medium transition-colors">
                 Home
               </Link>
             </motion.div>
@@ -68,7 +156,7 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.3 }}
             >
-              <Link href="/help" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
+              <Link href="/help" className="text-gray-500 hover:text-purple-600 px-2 py-2 text-sm font-medium transition-colors">
                 Help & Support
               </Link>
             </motion.div>
@@ -77,109 +165,290 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.4 }}
             >
-              <Link href="/changelog" className="text-gray-500 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors">
+              <Link href="/changelog" className="text-gray-500 hover:text-purple-600 px-2 py-2 text-sm font-medium transition-colors">
                 Changelog
               </Link>
             </motion.div>
+
+            {/* Auth Button */}
             <motion.div
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.5 }}
-              whileHover={{ scale: 1.05 }}
+              className="relative ml-2"
+              onMouseEnter={handleProfileMouseEnter}
+              onMouseLeave={handleProfileMouseLeave}
+              style={disabledAuthStyle}
             >
-              <a 
-                href="https://github.com/imsurajj/FileSwift/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
-              >
-                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path>
-                </svg>
-                GitHub
-              </a>
+              {authStatus === 'loading' ? (
+                <div className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium animate-pulse">
+                  Loading...
+                </div>
+              ) : authStatus === 'authenticated' ? (
+                <div className="relative">
+                  <button 
+                    ref={profileButtonRef}
+                    onClick={toggleProfileMenu}
+                    className="flex items-center space-x-1 focus:outline-none group"
+                    aria-expanded={showProfileMenu}
+                    aria-haspopup="true"
+                    style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden border border-purple-200 transition-all duration-200 group-hover:ring-2 group-hover:ring-purple-300">
+                      {session?.user?.image ? (
+                        <Image 
+                          src={session.user.image} 
+                          alt={session.user.name || 'User'} 
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-purple-700">
+                          {session?.user?.name?.charAt(0) || 'U'}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 transition-colors">
+                      {session?.user?.name || 'User'}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 group-hover:text-purple-600 ${showProfileMenu ? 'transform rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {showProfileMenu && (
+                    <div 
+                      ref={profileMenuRef}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5 transition-opacity duration-300 ease-in-out"
+                      onMouseEnter={handleProfileMouseEnter}
+                      onMouseLeave={handleProfileMouseLeave}
+                      style={!ENABLE_AUTH ? { opacity: 0.6 } : {}}
+                    >
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.name}</p>
+                        <p className="text-xs text-gray-500 truncate mt-1">{session?.user?.email}</p>
+                      </div>
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowProfileMenu(false)}
+                        style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                      >
+                        <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/dashboard/files"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowProfileMenu(false)}
+                        style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                      >
+                        <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        My Files
+                      </Link>
+                      <Link
+                        href="/dashboard/settings"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowProfileMenu(false)}
+                        style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                      >
+                        <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Settings
+                      </Link>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                      >
+                        <svg className="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href={ENABLE_AUTH ? "/auth/signin" : "#"}
+                  onClick={(e) => {
+                    if (!ENABLE_AUTH) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                >
+                  Sign in
+                </Link>
+              )}
             </motion.div>
           </motion.nav>
 
           {/* Mobile menu button */}
-          <motion.div 
-            className="md:hidden flex items-center"
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <div className="flex md:hidden">
             <button
               onClick={toggleMenu}
-              className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none relative w-10 h-10 flex items-center justify-center"
-              aria-label="Toggle menu"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-600"
+              aria-expanded={isMenuOpen}
             >
-              <div className="w-6 h-6 flex flex-col justify-center items-center">
+              <span className="sr-only">Open main menu</span>
+              <div className="w-6 h-6 flex flex-col items-center justify-around">
                 <motion.span
-                  className="w-5 h-0.5 bg-current rounded-full block"
+                  className="w-full h-0.5 bg-gray-800 rounded-full transform-gpu"
                   variants={topLineVariants}
-                  animate={isMenuOpen ? "open" : "closed"}
+                  animate={isMenuOpen ? 'open' : 'closed'}
                   transition={{ duration: 0.3 }}
-                />
+                ></motion.span>
                 <motion.span
-                  className="w-5 h-0.5 bg-current rounded-full block my-1"
+                  className="w-full h-0.5 bg-gray-800 rounded-full transform-gpu"
                   variants={middleLineVariants}
-                  animate={isMenuOpen ? "open" : "closed"}
-                  transition={{ duration: 0.2 }}
-                />
-                <motion.span
-                  className="w-5 h-0.5 bg-current rounded-full block"
-                  variants={bottomLineVariants}
-                  animate={isMenuOpen ? "open" : "closed"}
+                  animate={isMenuOpen ? 'open' : 'closed'}
                   transition={{ duration: 0.3 }}
-                />
+                ></motion.span>
+                <motion.span
+                  className="w-full h-0.5 bg-gray-800 rounded-full transform-gpu"
+                  variants={bottomLineVariants}
+                  animate={isMenuOpen ? 'open' : 'closed'}
+                  transition={{ duration: 0.3 }}
+                ></motion.span>
               </div>
             </button>
-          </motion.div>
-        </div>
-
-        {/* Mobile menu */}
-        <motion.div 
-          className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: isMenuOpen ? 'auto' : 0, opacity: isMenuOpen ? 1 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="pt-2 pb-4 space-y-1 border-t border-gray-100">
-            <Link href="/" 
-              className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link href="/help" 
-              className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Help & Support
-            </Link>
-            <Link href="/changelog" 
-              className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Changelog
-            </Link>
-            <div className="px-3 py-2">
-              <a 
-                href="https://github.com/imsurajj/FileSwift/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-1.5 text-base font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path>
-                </svg>
-                GitHub
-              </a>
-            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
+
+      {/* Mobile menu */}
+      <motion.div
+        className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ 
+          opacity: isMenuOpen ? 1 : 0, 
+          height: isMenuOpen ? 'auto' : 0 
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-b border-gray-200">
+          <Link
+            href="/"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
+            href="/help"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Help & Support
+          </Link>
+          <Link
+            href="/changelog"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Changelog
+          </Link>
+        </div>
+        <div className="pt-4 pb-3 border-b border-gray-200" style={!ENABLE_AUTH ? { opacity: 0.6 } : {}}>
+          {authStatus === 'authenticated' ? (
+            <div className="flex items-center px-4">
+              <div className="flex-shrink-0">
+                <div className="h-10 w-10 rounded-full bg-purple-200 flex items-center justify-center">
+                  {session?.user?.image ? (
+                    <Image 
+                      src={session.user.image} 
+                      alt={session.user.name || 'User'} 
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-purple-700">
+                      {session?.user?.name?.charAt(0) || 'U'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="ml-3">
+                <div className="text-base font-medium text-gray-800">{session?.user?.name}</div>
+                <div className="text-sm font-medium text-gray-500">{session?.user?.email}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="px-4">
+              <Link
+                href={ENABLE_AUTH ? "/auth/signin" : "#"}
+                onClick={(e) => {
+                  if (!ENABLE_AUTH) {
+                    e.preventDefault();
+                  }
+                  setIsMenuOpen(false);
+                }}
+                className="block text-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+              >
+                Sign in
+              </Link>
+            </div>
+          )}
+          {authStatus === 'authenticated' && (
+            <div className="mt-3 px-2 space-y-1">
+              <Link
+                href="/dashboard"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
+                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/files"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
+                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+              >
+                My Files
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
+                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+              >
+                Settings
+              </Link>
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
+                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </motion.header>
   );
 } 

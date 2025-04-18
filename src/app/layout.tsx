@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Footer from './components/Footer';
+import AuthContext from "./context/AuthContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,11 +34,13 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </head>
       <body className={`${inter.className} flex flex-col min-h-screen`}>
-        <div className="flex-grow">
-          {children}
-        </div>
-        <Footer />
-        <Analytics />
+        <AuthContext>
+          <div className="flex-grow">
+            {children}
+          </div>
+          <Footer />
+          <Analytics />
+        </AuthContext>
       </body>
     </html>
   );
