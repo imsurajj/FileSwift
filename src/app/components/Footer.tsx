@@ -29,6 +29,9 @@ const Footer = () => {
             <Link href="/terms" className="text-gray-600 hover:text-purple-600 text-sm">
               Terms
             </Link>
+            <a href="https://github.com/imsurajj/FileSwift/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600 text-sm">
+              GitHub
+            </a>
           </div>
         </div>
         

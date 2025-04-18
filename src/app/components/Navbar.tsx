@@ -88,7 +88,7 @@ export default function Navbar() {
               whileHover={{ scale: 1.05 }}
             >
               <a 
-                href="https://github.com" 
+                href="https://github.com/imsurajj/FileSwift/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
@@ -165,7 +165,7 @@ export default function Navbar() {
             </Link>
             <div className="px-3 py-2">
               <a 
-                href="https://github.com" 
+                href="https://github.com/imsurajj/FileSwift/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-3 py-1.5 text-base font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
