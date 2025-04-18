@@ -19,7 +19,7 @@ function Footer() {
           whileHover={{ scale: 1.02 }}
           className="inline-flex items-center gap-1"
         >
-          <Link href="/" className="text-purple-600 hover:text-purple-700 transition-colors">FileSwift</Link> • Built with <span className="text-red-500">♥</span> using Next.js
+          <Link href="/" className="text-purple-600 hover:text-purple-700 transition-colors">FileSwift</Link> • Built with <span className="text-red-500">♥</span> By Suraj
         </motion.div>
       </div>
     </motion.footer>

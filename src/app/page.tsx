@@ -10,7 +10,6 @@ import LoadingOverlay from './components/LoadingOverlay'
 import Navbar from './components/Navbar'
 import ToggleSwitch from './components/ToggleSwitch'
 import { useSearchParams, useRouter } from 'next/navigation'
-
 // Define types for received files
 interface ReceivedFile {
   fileName: string;
@@ -801,29 +800,7 @@ function FileTransfer() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <Footer />
     </div>
   )
 }
 
-function Footer() {
-  return (
-    <motion.footer 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="py-6 px-4 text-center text-sm text-gray-500 bg-white/50 backdrop-blur-sm border-t border-gray-100 mt-auto"
-    >
-      <div className="container mx-auto">
-      <motion.div
-        initial={{ scale: 1 }}
-        whileHover={{ scale: 1.02 }}
-        className="inline-flex items-center gap-1"
-      >
-          <a href="/" className="text-purple-600 hover:text-purple-700 transition-colors">FileSwift</a> • Built with <span className="text-red-500">♥</span> using Next.js
-      </motion.div>
-      </div>
-    </motion.footer>
-  )
-}
