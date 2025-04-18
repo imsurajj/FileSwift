@@ -1,4 +1,4 @@
-# 🚀 FileSwift v1.0.0 - Instant File Sharing Made Beautiful ✨
+# 🚀 FileSwift v1.0.0 - Instant File Sharing Made Beautiful
 
 
 ![FileSwift Logo](https://github.com/imsurajj/FileSwift/raw/main/public/logo.png)
