@@ -1,73 +1,127 @@
 # FileSwift - Instant File Sharing
 
-FileSwift is a modern web application that allows users to easily share files with anyone through unique links and QR codes, without requiring any login or account creation. Files are stored temporarily and automatically deleted after download or after 1 hour.
+![FileSwift Logo](public/logo.png)
 
-## Features
+FileSwift is a modern, serverless file sharing application that allows users to quickly share files with anyone through unique links and QR codes. No login or account creation required - just upload and share.
 
-- Drag and drop file upload
-- Instant file sharing via unique links
-- QR code generation for easy mobile access
-- No sign-up required
-- Beautiful, responsive UI with animations
-- Temporary file storage with automatic cleanup
-- Files are automatically deleted after download or after 1 hour
-- Original file names preserved during download
+## 🚀 Features
 
-## Prerequisites
+- **Drag & Drop Upload**: Simple and intuitive file uploading
+- **Instant Sharing**: Generate unique links and QR codes immediately
+- **No Registration**: No account creation or login required
+- **Temporary Storage**: Files are automatically deleted after download or after 1 hour
+- **Privacy-Focused**: Files are stored temporarily and securely
+- **Mobile-Friendly**: Responsive design works on all devices
+- **Dark Mode**: Built-in dark mode support
+- **Offline Support**: Works offline with PWA capabilities
+- **Original Filenames**: Preserves original file names during download
+
+## 📋 Prerequisites
 
 - Node.js 18 or later
-- npm or yarn
+- npm or yarn package manager
 
-## Setup
+## 🛠️ Installation
 
-1. Clone the repository:
+1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
+   git clone https://github.com/yourusername/fileswift.git
 cd fileswift
 ```
 
-2. Install dependencies:
+2. **Install dependencies**
 ```bash
 npm install
 # or
 yarn install
 ```
 
-3. Create a `.env.local` file in the root directory with the following variable:
-```env
+3. **Set up environment variables**  
+   Create a `.env.local` file in the root directory:
+   ```
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-4. Run the development server:
+4. **Run the development server**
 ```bash
 npm run dev
 # or
 yarn dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. **Open your browser**  
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-## How it Works
+## 🔄 How It Works
 
-1. When a user uploads a file, it is stored in a temporary directory on the server
-2. A unique link and QR code are generated for the file
-3. The file can be downloaded using the unique link with its original filename
-4. After download, the file is automatically deleted
-5. Any files not downloaded within 1 hour are automatically cleaned up
-6. Files are stored in the system's temporary directory, which is automatically cleaned by the OS
+1. User uploads a file through the web interface
+2. File is stored in temporary server storage
+3. A unique link and QR code are generated
+4. User shares the link or QR code with recipients
+5. Recipients can download the file with the original filename
+6. After download, the file is automatically deleted
+7. Files not downloaded within 1 hour are automatically removed
 
-## Technologies Used
+## 🏗️ Project Structure
 
-- Next.js 14
-- React
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- react-qr-code
+```
+fileswift/
+├── public/           # Static assets
+├── src/
+│   ├── app/          # Next.js app directory
+│   │   ├── api/      # API endpoints
+│   │   ├── components/  # Reusable UI components
+│   │   ├── download/ # File download routes
+│   │   ├── upload/   # File upload routes
+│   │   ├── help/     # Help documentation
+│   │   └── changelog/ # Version changelog
+│   └── utils/        # Utility functions
+├── .env.local        # Environment variables
+└── package.json      # Project dependencies
+```
 
-## License
+## 💻 Technologies
 
-MIT License
+- **Frontend**: React, Next.js 14
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Language**: TypeScript
+- **QR Code**: react-qr-code
+- **File Handling**: Node.js file system APIs
+- **Unique IDs**: nanoid, uuid
+
+## 🚀 Deployment
+
+The application can be deployed to various platforms:
+
+### Vercel (Recommended)
+```bash
+npm install -g vercel
+vercel
+```
+
+### Traditional Hosting
+```bash
+npm run build
+npm run start
+```
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Contributing
+
+Contributions are welcome! Please check out our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## 🙏 Acknowledgments
+
+- Next.js team for the amazing framework
+- All open-source contributors whose libraries made this possible
+
+## 📧 Contact
+
+For questions or support, please open an issue on GitHub.
 
 ## Learn More
 

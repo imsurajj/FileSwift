@@ -1,21 +1,63 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Navbar from '@/app/components/Navbar'
 
+// Configuration options to enable/disable features
+const HELP_PAGE_CONFIG = {
+  enableContactForm: true, // Set to false to disable the contact form
+  enableChat: false, // Set to false to disable the chat popup button
+}
+
 export default function HelpPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [category, setCategory] = useState('general')
+  const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
-  const [attachedFile, setAttachedFile] = useState<File | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  // Define FAQs outside the render function
+  const faqs = [
+    {
+      question: "How does FileSwift work?",
+      answer: "FileSwift allows you to quickly share files with others without requiring an account. Files are temporarily stored on our servers and automatically deleted after being downloaded or within 24 hours."
+    },
+    {
+      question: "Is there a file size limit?",
+      answer: "Yes, the current file size limit is 100MB per file. This helps us maintain a fast and reliable service for everyone."
+    },
+    {
+      question: "How long are my files stored?",
+      answer: "Files are automatically deleted after being downloaded or within 24 hours of upload, whichever comes first."
+    },
+    {
+      question: "Is my data secure?",
+      answer: "We take security seriously. Files are transferred using secure connections and stored temporarily. We do not analyze or access the content of your files."
+    },
+    {
+      question: "Do I need to create an account?",
+      answer: "No, FileSwift is designed to be used without an account. Just upload your files and share the generated link with your recipients."
+    },
+    {
+      question: "Can I password protect my files?",
+      answer: "Yes, you can add password protection to your shared files for additional security. Recipients will need the password to download the files."
+    },
+    {
+      question: "How many files can I share at once?",
+      answer: "You can share up to 10 files in a single share link. If you need to share more, you can create multiple share links."
+    },
+    {
+      question: "Is FileSwift free to use?",
+      answer: "Yes, FileSwift is completely free for personal use. We may introduce premium features in the future, but the core functionality will always remain free."
+    }
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -29,11 +71,11 @@ export default function HelpPage() {
     const formData = new FormData()
     formData.append('name', name)
     formData.append('email', email)
-    formData.append('category', category)
+    formData.append('subject', subject)
     formData.append('message', message)
     formData.append('notifyEmail', 'iamsurajbro946@gmail.com')
-    if (attachedFile) {
-      formData.append('file', attachedFile)
+    if (file) {
+      formData.append('file', file)
     }
     
     // Call the API endpoint
@@ -48,7 +90,7 @@ export default function HelpPage() {
         throw new Error(errorData.error || 'Failed to send message')
       }
       
-      setSubmitted(true)
+      setSuccess(true)
       setError('')
     } catch (err) {
       console.error('Contact form error:', err)
@@ -64,16 +106,13 @@ export default function HelpPage() {
         setError('File is too large. Maximum size is 10MB.')
         return
       }
-      setAttachedFile(selectedFile)
+      setFile(selectedFile)
       setError('')
     }
   }
   
   const handleRemoveFile = () => {
-    setAttachedFile(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    setFile(null)
   }
   
   return (
@@ -92,15 +131,38 @@ export default function HelpPage() {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">Get help with FileSwift or contact our support team using the chat button below</p>
           </div>
           
+          {/* Shimmering Note Banner */}
+          <div className="w-4/5 mx-auto mb-6">
+            <div className="bg-purple-600 rounded-lg shadow-md relative overflow-hidden text-white">
+              <div className="absolute top-0 left-0 right-0 bottom-0 overflow-hidden">
+                <div className="absolute -inset-[10px] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-45deg] animate-shimmer"></div>
+              </div>
+              <div className="flex items-center z-10 relative p-4">
+                <div className="flex-shrink-0 mr-3">
+                  <div className="relative">
+                    <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full animate-ping"></span>
+                    <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full"></span>
+                  </div>
+                </div>
+                <p className="font-medium">We're providing email support only for now due to some technical issues with our chat system.</p>
+              </div>
+            </div>
+          </div>
+          
           {/* Main content */}
           <div className="space-y-10 mb-12">
             {/* Contact Info Card - 80% width */}
             <div className="w-4/5 mx-auto">
-              <div className="bg-gradient-to-br from-purple-100 to-indigo-200 rounded-2xl shadow-md p-8 text-gray-800 border border-purple-200 backdrop-blur-sm transform transition-all hover:shadow-lg">
+              <div className="bg-gradient-to-br from-purple-200 via-purple-100 to-indigo-100 rounded-2xl shadow-md p-8 text-gray-800 border border-purple-200/70 backdrop-blur-sm transform transition-all hover:shadow-lg">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                   <div className="flex items-center">
-                    <div className="mr-5 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-md">
+                    <div className="mr-5 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-md">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
@@ -114,7 +176,7 @@ export default function HelpPage() {
                   </div>
                   
                   <div className="flex items-center">
-                    <div className="mr-5 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-md">
+                    <div className="mr-5 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-md">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                       </svg>
@@ -129,7 +191,7 @@ export default function HelpPage() {
                   </div>
                 </div>
                 
-                <div className="bg-white/70 rounded-xl p-5 border border-purple-200/50">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200/50 backdrop-blur-sm">
                   <div className="flex items-center">
                     <div className="mr-4 text-purple-600">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,54 +213,15 @@ export default function HelpPage() {
                 <p className="text-gray-600 text-center mb-10 max-w-3xl mx-auto">Find answers to common questions about FileSwift and how it works</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(() => {
-                    const faqs = [
-                      {
-                        question: "How does FileSwift work?",
-                        answer: "FileSwift allows you to quickly share files with others without requiring an account. Files are temporarily stored on our servers and automatically deleted after being downloaded or within 24 hours."
-                      },
-                      {
-                        question: "Is there a file size limit?",
-                        answer: "Yes, the current file size limit is 100MB per file. This helps us maintain a fast and reliable service for everyone."
-                      },
-                      {
-                        question: "How long are my files stored?",
-                        answer: "Files are automatically deleted after being downloaded or within 24 hours of upload, whichever comes first."
-                      },
-                      {
-                        question: "Is my data secure?",
-                        answer: "We take security seriously. Files are transferred using secure connections and stored temporarily. We do not analyze or access the content of your files."
-                      },
-                      {
-                        question: "Do I need to create an account?",
-                        answer: "No, FileSwift is designed to be used without an account. Just upload your files and share the generated link with your recipients."
-                      },
-                      {
-                        question: "Can I password protect my files?",
-                        answer: "Yes, you can add password protection to your shared files for additional security. Recipients will need the password to download the files."
-                      },
-                      {
-                        question: "How many files can I share at once?",
-                        answer: "You can share up to 10 files in a single share link. If you need to share more, you can create multiple share links."
-                      },
-                      {
-                        question: "Is FileSwift free to use?",
-                        answer: "Yes, FileSwift is completely free for personal use. We may introduce premium features in the future, but the core functionality will always remain free."
-                      }
-                    ];
-                    
-                    const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-                    
-                    return faqs.map((faq, index) => (
-                      <FaqItem 
-                        key={index} 
-                        question={faq.question} 
-                        answer={faq.answer} 
-                        isOpen={openFaqIndex === index}
-                        onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                      />
-                    ));
-                  })()}
+                  {faqs.map((faq, index) => (
+                    <FaqItem 
+                      key={index} 
+                      question={faq.question} 
+                      answer={faq.answer} 
+                      isOpen={openFaqIndex === index}
+                      onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
@@ -220,18 +243,39 @@ export default function HelpPage() {
         </div>
       </motion.footer>
       
-      {/* Floating Chat Button */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-purple-700 transition-colors z-50"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-      </button>
-      
-      {/* Chat Popup */}
-      {chatOpen && <ChatPopup onClose={() => setChatOpen(false)} />}
+      {/* Contact Form - always visible but conditionally disabled */}
+      <div className="mb-10">
+        <div className={`relative ${!HELP_PAGE_CONFIG.enableContactForm ? 'opacity-60 pointer-events-none' : ''}`}>
+          <ContactForm />
+          {!HELP_PAGE_CONFIG.enableContactForm && (
+            <div className="absolute inset-0 bg-transparent flex items-center justify-center">
+              <div className="bg-white/80 px-4 py-2 rounded-lg shadow-md text-gray-700 font-medium">
+                Contact form temporarily disabled
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Chat Button and Chat Popup */}
+      <>
+        <button
+          onClick={() => HELP_PAGE_CONFIG.enableChat && setChatOpen(true)}
+          className={`fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-colors z-50 ${
+            HELP_PAGE_CONFIG.enableChat ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 opacity-90 pointer-events-none cursor-not-allowed'
+          }`}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </button>
+        
+        <AnimatePresence>
+          {chatOpen && HELP_PAGE_CONFIG.enableChat && (
+            <ChatPopup onClose={() => setChatOpen(false)} />
+          )}
+        </AnimatePresence>
+      </>
     </div>
   )
 }
@@ -593,5 +637,158 @@ function ChatPopup({ onClose }: { onClose: () => void }) {
         </div>
       )}
     </motion.div>
+  )
+}
+
+// Contact Form Component
+const ContactForm = () => {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [subject, setSubject] = useState('')
+  const [message, setMessage] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Form validation
+    if (!name || !email || !message) {
+      setError('Please fill out all required fields')
+      return
+    }
+    
+    // Prepare form data including file
+    const formData = new FormData()
+    formData.append('name', name)
+    formData.append('email', email)
+    formData.append('subject', subject)
+    formData.append('message', message)
+    formData.append('notifyEmail', 'iamsurajbro946@gmail.com')
+    if (file) {
+      formData.append('file', file)
+    }
+    
+    // Call the API endpoint
+    try {
+      const response = await fetch('/api/help/contact', { 
+        method: 'POST', 
+        body: formData 
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send message')
+      }
+      
+      setSuccess(true)
+      setError('')
+    } catch (err) {
+      console.error('Contact form error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.')
+    }
+  }
+  
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      // Check file size (limit to 10MB for example)
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setError('File is too large. Maximum size is 10MB.')
+        return
+      }
+      setFile(selectedFile)
+      setError('')
+    }
+  }
+  
+  const handleRemoveFile = () => {
+    setFile(null)
+  }
+  
+  return (
+    <div className="w-4/5 mx-auto">
+      <div className="bg-gradient-to-br from-purple-200 via-purple-100 to-indigo-100 rounded-2xl shadow-md p-8 text-gray-800 border border-purple-200/70 backdrop-blur-sm transform transition-all hover:shadow-lg">
+        <h2 className="text-3xl font-bold mb-4 text-center text-gray-800">Contact Us</h2>
+        <p className="text-gray-600 text-center mb-10 max-w-3xl mx-auto">We're here to help! Please fill out the form below and we'll get back to you as soon as possible.</p>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Your Name *"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+              required
+            />
+            <input
+              type="email"
+              placeholder="Your Email *"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+              required
+            />
+          </div>
+          
+          <input
+            type="text"
+            placeholder="Subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+          />
+          
+          <textarea
+            placeholder="Message *"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+            required
+          ></textarea>
+          
+          <div className="flex items-center justify-center">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.txt,.jpg,.png"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="file-input"
+            />
+            <label
+              htmlFor="file-input"
+              className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors cursor-pointer"
+            >
+              Attach File
+            </label>
+          </div>
+          
+          {file && (
+            <div className="flex items-center justify-center">
+              <span className="px-3 py-2 bg-purple-100 text-purple-800 rounded-lg mr-2">
+                {file.name}
+              </span>
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+          
+          <button
+            type="submit"
+            className="w-full px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Send Message
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }
