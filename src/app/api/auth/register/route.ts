@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createUser, getUserByEmail } from '@/lib/auth/user';
 
+// Add dynamic export to force Next.js to recognize this as a fully dynamic route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json();

@@ -38,3 +38,6 @@ next-env.d.ts
 # temp files
 /tmp
 quickshare-temp/
+
+# Build temp directory
+/temp
