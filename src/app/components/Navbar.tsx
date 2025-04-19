@@ -278,7 +278,7 @@ export default function Navbar() {
                       >
                         <svg className="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
+                </svg>
                         Sign out
                       </button>
                     </div>
@@ -332,10 +332,10 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* Mobile menu */}
-      <motion.div
+        {/* Mobile menu */}
+        <motion.div 
         className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}
         initial={{ opacity: 0, height: 0 }}
         animate={{ 
@@ -348,24 +348,24 @@ export default function Navbar() {
           <Link
             href="/"
             className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Home
-          </Link>
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
           <Link
             href="/help"
             className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Help & Support
-          </Link>
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Help & Support
+            </Link>
           <Link
             href="/changelog"
             className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Changelog
-          </Link>
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Changelog
+            </Link>
         </div>
         <div className="pt-4 pb-3 border-b border-gray-200" style={!ENABLE_AUTH ? { opacity: 0.6 } : {}}>
           {authStatus === 'authenticated' ? (
@@ -447,8 +447,8 @@ export default function Navbar() {
               </button>
             </div>
           )}
-        </div>
-      </motion.div>
+          </div>
+        </motion.div>
     </motion.header>
   );
 } 

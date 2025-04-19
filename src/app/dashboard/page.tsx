@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
-  const [isSignedIn, setIsSignedIn] = useState(status === "authenticated");
   const [stats, setStats] = useState({
     recentFiles: 12,
     sharedFiles: 5,
@@ -35,45 +34,16 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    setIsSignedIn(status === "authenticated");
-  }, [status]);
-
-  const handleToggleSignIn = () => {
-    if (isSignedIn) {
-      signOut();
-    } else {
-      signIn();
-    }
-    setIsSignedIn(!isSignedIn);
-  };
-
   return (
     <div className="max-w-[1200px] mx-auto py-8">
-      {/* Header with minimal greeting and sign-in toggle */}
+      {/* Header with minimal greeting */}
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">Welcome, {session?.user?.name?.split(' ')[0] || 'User'}</p>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Sign-in Toggle Switch */}
-          <div className="flex items-center">
-            <span className="mr-2 text-sm text-gray-600">Signed In</span>
-            <button 
-              onClick={handleToggleSignIn}
-              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1"
-              style={{ backgroundColor: isSignedIn ? '#9333ea' : '#d1d5db' }}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isSignedIn ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-          
-          <button className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center">
+        <div>
+          <button className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
