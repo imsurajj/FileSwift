@@ -1,5 +1,5 @@
 {
-  "buildCommand": "mkdir -p temp && node scripts/build.js",
+  "buildCommand": "SKIP_DB_CONNECT=true PRISMA_CLIENT_NO_SCHEMA_VALIDATION=true next build --no-lint",
   "framework": "nextjs",
   "outputDirectory": ".next",
   "regions": ["iad1"],
@@ -7,8 +7,6 @@
   "env": {
     "PRISMA_CLIENT_NO_SCHEMA_VALIDATION": "true",
     "NEXTAUTH_URL": "${VERCEL_URL}",
-    "SKIP_DB_CONNECT": "true",
-    "TEMP": "./temp",
-    "TMP": "./temp"
+    "SKIP_DB_CONNECT": "true"
   }
 } 

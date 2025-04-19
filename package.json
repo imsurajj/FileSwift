@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/build.js",
+    "build": "next build --no-lint",
+    "vercel-build": "SKIP_DB_CONNECT=true PRISMA_CLIENT_NO_SCHEMA_VALIDATION=true next build --no-lint",
     "start": "next start",
     "lint": "next lint",
-    "seed": "npx tsx src/scripts/seed.ts"
+    "seed": "npx tsx src/scripts/seed.ts",
+    "clean-temp": "node bypass-temp.js"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

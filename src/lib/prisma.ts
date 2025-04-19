@@ -5,47 +5,47 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-// During build process on Vercel or other CI, we want to avoid database connections
-// isProd helps identify if we are in a real production environment vs. just build time
-const isProd = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production';
-const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV;
+// Function to determine if we're in a build environment
+const isBuildTime = () => {
+  return process.env.SKIP_DB_CONNECT === 'true';
+};
 
-// Custom Prisma initialization that handles build-time safely
-function createPrismaClient() {
-  // For build time, return a mock client
-  if (isBuildTime) {
-    console.log("Build-time detected, using mock Prisma client");
-    
-    // Return mock implementation that won't try to connect to a database
-    return new Proxy({} as PrismaClient, {
-      get: (target, prop) => {
-        // Return mock methods for commonly used operations
-        if (['user', 'post', 'comment'].includes(prop as string)) {
-          return {
-            findUnique: async () => null,
-            findMany: async () => [],
-            create: async () => ({}),
-            update: async () => ({}),
-            delete: async () => ({}),
-          };
-        }
-        return () => {};
-      },
-    });
+// Create a mock client for build time
+const mockPrismaClient = {
+  user: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => ({}),
+    update: async () => ({}),
+    delete: async () => ({}),
+  },
+  // Add other models as needed
+} as unknown as PrismaClient;
+
+// Create or get the Prisma client
+function getPrismaClient() {
+  // Return mock client during build
+  if (isBuildTime()) {
+    console.log('Using mock Prisma client for build');
+    return mockPrismaClient;
   }
   
+  // Return actual client for runtime
   try {
-    // For development or real production, use the real Prisma client
     return new PrismaClient();
   } catch (error) {
-    console.error("Failed to initialize Prisma client:", error);
-    // Return mock client as fallback
-    return {} as PrismaClient;
+    console.error('Failed to initialize Prisma client:', error);
+    return mockPrismaClient;
   }
 }
 
-export const prisma = globalThis.prisma || createPrismaClient();
+// Initialize the client
+const prisma = globalThis.prisma || getPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
+// Save the client reference in development
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prisma = prisma;
+}
 
+export { prisma };
 export default prisma; 

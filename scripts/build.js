@@ -1,23 +1,20 @@
-// Custom build script to handle Windows temp file permission issues
+// Custom build script to handle build process safely
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Create temp directory if it doesn't exist
+// Create temp directory if it doesn't exist but don't use it for TEMP env vars
 const tempDir = path.join(process.cwd(), 'temp');
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
   console.log(`Created temp directory: ${tempDir}`);
 }
 
-// Set environment variables to bypass the problematic temp folder
-process.env.TEMP = tempDir;
-process.env.TMP = tempDir;
+// Set environment variables to avoid database connection issues
 process.env.PRISMA_CLIENT_NO_SCHEMA_VALIDATION = 'true';
 process.env.SKIP_DB_CONNECT = 'true';
 
-console.log('Starting custom build with modified environment...');
-console.log(`Using temp directory: ${tempDir}`);
+console.log('Starting custom build...');
 
 try {
   // Execute the actual Next.js build command with options to skip problematic parts
