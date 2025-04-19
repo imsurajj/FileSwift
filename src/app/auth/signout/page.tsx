@@ -34,7 +34,7 @@ export default function SignOutPage() {
             <Button
               type="button"
               onClick={handleSignOut}
-              loading={isLoading}
+              isLoading={isLoading}
               className="w-full"
             >
               Sign out
