@@ -12,6 +12,9 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentTab, setCurrentTab] = useState("profile");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [showTwoFactorDialog, setShowTwoFactorDialog] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorQRCode, setTwoFactorQRCode] = useState("");
   const [formValues, setFormValues] = useState({
     fullName: session?.user?.name || "",
     email: session?.user?.email || "",
@@ -102,6 +105,7 @@ export default function SettingsPage() {
     }
     
     setIsLoading(true);
+    setSuccessMessage(""); // Clear any existing success message
     
     try {
       // In a real app, this would be a call to your API to update user info
@@ -124,10 +128,18 @@ export default function SettingsPage() {
       });
       
       setSuccessMessage("Profile updated successfully");
-      setIsLoading(false);
+      
+      // Optionally refresh the session to ensure navbar updates
+      // This is already done by the update function, but explicitly setting it here
+      // makes it clear that we want the navbar to update
+      setTimeout(() => {
+        window.dispatchEvent(new Event('session-update'));
+      }, 300);
+      
     } catch (error) {
       console.error("Profile update error:", error);
       setErrors({ form: "An unexpected error occurred. Please try again." });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -140,6 +152,7 @@ export default function SettingsPage() {
     }
     
     setIsLoading(true);
+    setSuccessMessage(""); // Clear any existing success message
     
     try {
       // In a real app, this would be a call to your API to update password
@@ -154,10 +167,10 @@ export default function SettingsPage() {
       });
       
       setSuccessMessage("Password updated successfully");
-      setIsLoading(false);
     } catch (error) {
       console.error("Password update error:", error);
       setErrors({ form: "An unexpected error occurred. Please try again." });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -166,18 +179,61 @@ export default function SettingsPage() {
     e.preventDefault();
     
     setIsLoading(true);
+    setSuccessMessage(""); // Clear any existing success message
     
     try {
       // In a real app, this would be a call to your API to update preferences
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Here you would save all preferences to your backend
+      console.log("Saving preferences:", {
+        profileVisibility: formValues.profileVisibility,
+        fileVisibility: formValues.fileVisibility,
+        activityVisibility: formValues.activityVisibility,
+        emailNotifications: formValues.emailNotifications,
+        pushNotifications: formValues.pushNotifications,
+        language: formValues.language,
+        timezone: formValues.timezone
+      });
+      
       setSuccessMessage("Preferences updated successfully");
-      setIsLoading(false);
     } catch (error) {
       console.error("Preferences update error:", error);
       setErrors({ form: "An unexpected error occurred. Please try again." });
+    } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTwoFactorEnable = () => {
+    // In a real app, this would call your API to request 2FA setup
+    setIsLoading(true);
+    
+    // Simulate API call to get QR code for 2FA setup
+    setTimeout(() => {
+      // This is just a placeholder URL - in a real app, this would be a generated QR code from your backend
+      setTwoFactorQRCode("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/FileSwift:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=FileSwift");
+      setShowTwoFactorDialog(true);
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleTwoFactorVerify = () => {
+    // In a real app, this would verify the submitted code with your API
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      // Simulate successful verification
+      alert("Two-factor authentication enabled successfully!");
+      setShowTwoFactorDialog(false);
+      setTwoFactorCode("");
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleTwoFactorCancel = () => {
+    setShowTwoFactorDialog(false);
+    setTwoFactorCode("");
   };
 
   const settingsTabs = [
@@ -193,12 +249,12 @@ export default function SettingsPage() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-            <p className="text-sm text-gray-600">Manage your account settings and preferences</p>
+            <p className="text-base text-gray-600">Manage your account settings and preferences</p>
           </div>
           
           {/* Settings Tabs */}
-          <div className="border-b border-gray-200 mb-6">
-            <nav className="-mb-px flex space-x-6 overflow-x-auto">
+          <div className="border-b border-gray-200 mb-8">
+            <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {settingsTabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -250,274 +306,279 @@ export default function SettingsPage() {
           
           {/* Profile Information Section */}
           {currentTab === "profile" && (
-            <div className="md:grid md:grid-cols-3 md:gap-6">
-              <div className="md:col-span-1">
-                <div className="px-4 sm:px-0">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">Profile Information</h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Update your account profile information and how we can reach you.
-                  </p>
-                </div>
-              </div>
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Profile Details</h2>
               
-              <div className="mt-5 md:mt-0 md:col-span-2">
-                <form onSubmit={handleProfileSubmit}>
-                  <div className="shadow sm:rounded-md sm:overflow-hidden">
-                    <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
-                      {/* Profile Picture */}
-                      <ProfileUpload 
-                        initialImage={session?.user?.image || null}
-                        onChange={setProfilePicture}
-                        className="mb-4"
-                      />
-                      
-                      <div className="grid grid-cols-6 gap-6">
-                        <div className="col-span-6 sm:col-span-3">
-                          <Input
-                            label="Full Name"
-                            name="fullName"
-                            type="text"
-                            autoComplete="name"
-                            value={formValues.fullName}
-                            onChange={handleChange}
-                            error={errors.fullName}
-                            required
-                          />
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <Input
-                            label="Email Address"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            value={formValues.email}
-                            onChange={handleChange}
-                            error={errors.email}
-                            required
-                          />
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <Input
-                            label="Phone Number"
-                            name="phone"
-                            type="tel"
-                            autoComplete="tel"
-                            value={formValues.phone}
-                            onChange={handleChange}
-                            error={errors.phone}
-                            placeholder="(Optional)"
-                          />
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <Input
-                            label="Company"
-                            name="company"
-                            type="text"
-                            value={formValues.company}
-                            onChange={handleChange}
-                            placeholder="(Optional)"
-                          />
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-                            Country / Region
-                          </label>
-                          <select
-                            id="country"
-                            name="country"
-                            autoComplete="country-name"
-                            value={formValues.country}
-                            onChange={handleChange}
-                            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                          >
-                            <option value="">Select a country</option>
-                            <option value="US">United States</option>
-                            <option value="CA">Canada</option>
-                            <option value="UK">United Kingdom</option>
-                            <option value="AU">Australia</option>
-                            <option value="DE">Germany</option>
-                            <option value="FR">France</option>
-                            <option value="ES">Spain</option>
-                            <option value="BR">Brazil</option>
-                            <option value="IN">India</option>
-                            <option value="JP">Japan</option>
-                          </select>
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <label htmlFor="language" className="block text-sm font-medium text-gray-700">
-                            Language
-                          </label>
-                          <select
-                            id="language"
-                            name="language"
-                            value={formValues.language}
-                            onChange={handleChange}
-                            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                          >
-                            <option value="English">English</option>
-                            <option value="Spanish">Spanish</option>
-                            <option value="French">French</option>
-                            <option value="German">German</option>
-                            <option value="Portuguese">Portuguese</option>
-                            <option value="Japanese">Japanese</option>
-                            <option value="Chinese">Chinese</option>
-                          </select>
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <label htmlFor="timezone" className="block text-sm font-medium text-gray-700">
-                            Timezone
-                          </label>
-                          <select
-                            id="timezone"
-                            name="timezone"
-                            value={formValues.timezone}
-                            onChange={handleChange}
-                            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                          >
-                            <option value="UTC">UTC (Coordinated Universal Time)</option>
-                            <option value="EST">EST (Eastern Standard Time)</option>
-                            <option value="CST">CST (Central Standard Time)</option>
-                            <option value="MST">MST (Mountain Standard Time)</option>
-                            <option value="PST">PST (Pacific Standard Time)</option>
-                            <option value="GMT">GMT (Greenwich Mean Time)</option>
-                            <option value="CET">CET (Central European Time)</option>
-                            <option value="JST">JST (Japan Standard Time)</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                      <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
-                      >
-                        Save Changes
-                      </Button>
-                    </div>
+              <form onSubmit={handleProfileSubmit} className="space-y-6">
+                {/* Profile Picture */}
+                <div className="mb-6">
+                  <ProfileUpload 
+                    initialImage={session?.user?.image || null}
+                    onChange={setProfilePicture}
+                  />
+                  <div className="mt-2 flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">JPG, PNG or GIF. 1MB max.</span>
                   </div>
-                </form>
-              </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name
+                    </label>
+                    <Input
+                      name="fullName"
+                      type="text"
+                      autoComplete="name"
+                      value={formValues.fullName}
+                      onChange={handleChange}
+                      error={errors.fullName}
+                      required
+                      className="h-10 text-base"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <Input
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      value={formValues.email}
+                      onChange={handleChange}
+                      error={errors.email}
+                      required
+                      className="h-10 text-base"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number
+                    </label>
+                    <Input
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      value={formValues.phone}
+                      onChange={handleChange}
+                      error={errors.phone}
+                      placeholder="(Optional)"
+                      className="h-10 text-base"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Company
+                    </label>
+                    <Input
+                      name="company"
+                      type="text"
+                      value={formValues.company}
+                      onChange={handleChange}
+                      placeholder="(Optional)"
+                      className="h-10 text-base"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                      Country / Region
+                    </label>
+                    <select
+                      id="country"
+                      name="country"
+                      autoComplete="country-name"
+                      value={formValues.country}
+                      onChange={handleChange}
+                      className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Select a country</option>
+                      <option value="US">United States</option>
+                      <option value="CA">Canada</option>
+                      <option value="UK">United Kingdom</option>
+                      <option value="AU">Australia</option>
+                      <option value="DE">Germany</option>
+                      <option value="FR">France</option>
+                      <option value="ES">Spain</option>
+                      <option value="BR">Brazil</option>
+                      <option value="IN">India</option>
+                      <option value="JP">Japan</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-1">
+                      Language
+                    </label>
+                    <select
+                      id="language"
+                      name="language"
+                      value={formValues.language}
+                      onChange={handleChange}
+                      className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="English">English</option>
+                      <option value="Spanish">Spanish</option>
+                      <option value="French">French</option>
+                      <option value="German">German</option>
+                      <option value="Portuguese">Portuguese</option>
+                      <option value="Japanese">Japanese</option>
+                      <option value="Chinese">Chinese</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1">
+                      Timezone
+                    </label>
+                    <select
+                      id="timezone"
+                      name="timezone"
+                      value={formValues.timezone}
+                      onChange={handleChange}
+                      className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="UTC">UTC (Coordinated Universal Time)</option>
+                      <option value="EST">EST (Eastern Standard Time)</option>
+                      <option value="CST">CST (Central Standard Time)</option>
+                      <option value="MST">MST (Mountain Standard Time)</option>
+                      <option value="PST">PST (Pacific Standard Time)</option>
+                      <option value="GMT">GMT (Greenwich Mean Time)</option>
+                      <option value="CET">CET (Central European Time)</option>
+                      <option value="JST">JST (Japan Standard Time)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 py-2 px-5 text-base h-auto rounded"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
           
           {/* Security Section */}
           {currentTab === "security" && (
-            <div className="md:grid md:grid-cols-3 md:gap-6">
-              <div className="md:col-span-1">
-                <div className="px-4 sm:px-0">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">Security</h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Update your password and security settings to protect your account.
-                  </p>
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Password & Security</h2>
+              
+              <form className="space-y-5" onSubmit={handleSecuritySubmit}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <Input
+                    name="currentPassword"
+                    type="password"
+                    value={formValues.currentPassword}
+                    onChange={handleChange}
+                    error={errors.currentPassword}
+                    showPasswordToggle
+                    required
+                    className="h-10 text-base"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <Input
+                    name="newPassword"
+                    type="password"
+                    value={formValues.newPassword}
+                    onChange={handleChange}
+                    error={errors.newPassword}
+                    showPasswordToggle
+                    required
+                    className="h-10 text-base"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                  </label>
+                  <Input
+                    name="confirmPassword"
+                    type="password"
+                    value={formValues.confirmPassword}
+                    onChange={handleChange}
+                    error={errors.confirmPassword}
+                    showPasswordToggle
+                    required
+                    className="h-10 text-base"
+                  />
+                </div>
+                
+                <div className="pt-3">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 py-2 px-5 text-base h-auto rounded"
+                  >
+                    Update Password
+                  </Button>
+                </div>
+              </form>
+              
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mb-4 sm:mb-0">
+                    <h3 className="text-lg font-medium text-gray-900">Two-Factor Authentication</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Add an extra layer of security to your account by enabling two-factor authentication.
+                    </p>
+                  </div>
+                  <div>
+                    <Button
+                      type="button"
+                      isLoading={isLoading}
+                      className="bg-purple-600 text-white border border-purple-600 focus:ring-purple-500 py-2 px-4 text-sm h-auto rounded"
+                      onClick={handleTwoFactorEnable}
+                    >
+                      Enable 2FA
+                    </Button>
+                  </div>
                 </div>
               </div>
               
-              <div className="mt-5 md:mt-0 md:col-span-2">
-                <div className="shadow sm:rounded-md sm:overflow-hidden">
-                  <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
-                    <div>
-                      <h3 className="text-base font-medium text-gray-900">Change Password</h3>
-                      <form className="mt-4 space-y-4" onSubmit={handleSecuritySubmit}>
-                        <Input
-                          label="Current Password"
-                          name="currentPassword"
-                          type="password"
-                          value={formValues.currentPassword}
-                          onChange={handleChange}
-                          error={errors.currentPassword}
-                          showPasswordToggle
-                          required
-                        />
-                        
-                        <Input
-                          label="New Password"
-                          name="newPassword"
-                          type="password"
-                          value={formValues.newPassword}
-                          onChange={handleChange}
-                          error={errors.newPassword}
-                          showPasswordToggle
-                          required
-                        />
-                        
-                        <Input
-                          label="Confirm New Password"
-                          name="confirmPassword"
-                          type="password"
-                          value={formValues.confirmPassword}
-                          onChange={handleChange}
-                          error={errors.confirmPassword}
-                          showPasswordToggle
-                          required
-                        />
-                        
-                        <div className="pt-2">
-                          <Button
-                            type="submit"
-                            isLoading={isLoading}
-                            className="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
-                          >
-                            Update Password
-                          </Button>
-                        </div>
-                      </form>
-                    </div>
-                    
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-base font-medium text-gray-900">Two-Factor Authentication</h3>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Add an extra layer of security to your account by enabling two-factor authentication.
-                          </p>
-                        </div>
-                        <div>
-                          <Button
-                            type="button"
-                            className="bg-white text-purple-600 hover:text-purple-700 border border-purple-600 focus:ring-purple-500"
-                          >
-                            Enable 2FA
-                          </Button>
-                        </div>
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Sessions</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  See all your active sessions and log out devices.
+                </p>
+                <div>
+                  <div className="rounded border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Current Session</p>
+                        <p className="text-sm text-gray-500 mt-1">Windows • Chrome • {new Date().toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="h-2 w-2 bg-green-400 rounded-full mr-2"></span>
+                        <span className="text-sm text-green-600 font-medium">Active</span>
                       </div>
                     </div>
-                    
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-base font-medium text-gray-900">Sessions</h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        See all your active sessions and log out devices.
-                      </p>
-                      <div className="mt-4">
-                        <div className="rounded-md bg-gray-50 p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">Current Session</p>
-                              <p className="text-xs text-gray-500 mt-1">Windows • Chrome • {new Date().toLocaleDateString()}</p>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="h-2 w-2 bg-green-400 rounded-full mr-2"></span>
-                              <span className="text-xs text-green-600 font-medium">Active</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4 text-right">
-                          <Button
-                            type="button"
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                          >
-                            Log Out All Devices
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                  
+                  <div className="mt-4 text-right">
+                    <Button
+                      type="button"
+                      className="bg-red-600 hover:bg-red-700 focus:ring-red-500 py-2 px-4 text-sm h-auto rounded"
+                    >
+                      Log Out All Devices
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -526,270 +587,245 @@ export default function SettingsPage() {
           
           {/* Preferences Section */}
           {currentTab === "preferences" && (
-            <div className="md:grid md:grid-cols-3 md:gap-6">
-              <div className="md:col-span-1">
-                <div className="px-4 sm:px-0">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">Preferences</h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Customize your application preferences and visibility settings.
-                  </p>
-                </div>
-              </div>
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Preferences</h2>
               
-              <div className="mt-5 md:mt-0 md:col-span-2">
-                <form onSubmit={handlePreferencesSubmit}>
-                  <div className="shadow sm:rounded-md sm:overflow-hidden">
-                    <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
-                      <div>
-                        <h3 className="text-base font-medium text-gray-900">Profile Visibility</h3>
-                        <p className="text-sm text-gray-500 mt-1">Control who can see your profile information.</p>
-                        
-                        <div className="mt-4 space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Profile Visibility</label>
-                            <div className="mt-2">
-                              <select
-                                name="profileVisibility"
-                                value={formValues.profileVisibility}
-                                onChange={handleChange}
-                                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                              >
-                                <option value="public">Public - Anyone can view</option>
-                                <option value="followers">Followers Only</option>
-                                <option value="private">Private - Only me</option>
-                              </select>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">File Visibility Default</label>
-                            <div className="mt-2">
-                              <select
-                                name="fileVisibility"
-                                value={formValues.fileVisibility}
-                                onChange={handleChange}
-                                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                              >
-                                <option value="public">Public - Anyone can view</option>
-                                <option value="followers">Followers Only</option>
-                                <option value="private">Private - Only me</option>
-                              </select>
-                            </div>
-                            <p className="mt-1 text-xs text-gray-500">This will be the default setting for new file uploads.</p>
-                          </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Activity Visibility</label>
-                            <div className="mt-2">
-                              <select
-                                name="activityVisibility"
-                                value={formValues.activityVisibility}
-                                onChange={handleChange}
-                                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                              >
-                                <option value="public">Public - Anyone can view</option>
-                                <option value="followers">Followers Only</option>
-                                <option value="private">Private - Only me</option>
-                              </select>
-                            </div>
-                            <p className="mt-1 text-xs text-gray-500">Controls who can see your file activity and sharing history.</p>
-                          </div>
-                        </div>
+              <form onSubmit={handlePreferencesSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-700">Notification Preferences</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5">
+                        <input
+                          id="emailNotifications"
+                          name="emailNotifications"
+                          type="checkbox"
+                          checked={formValues.emailNotifications}
+                          onChange={(e) => setFormValues({...formValues, emailNotifications: e.target.checked})}
+                          className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                        />
                       </div>
-                      
-                      <div className="border-t border-gray-200 pt-6">
-                        <h3 className="text-base font-medium text-gray-900">Notification Preferences</h3>
-                        <p className="text-sm text-gray-500 mt-1">Configure how you want to receive notifications.</p>
-                        
-                        <div className="mt-4 space-y-4">
-                          <div className="flex items-start">
-                            <div className="flex items-center h-5">
-                              <input
-                                id="emailNotifications"
-                                name="emailNotifications"
-                                type="checkbox"
-                                checked={formValues.emailNotifications}
-                                onChange={(e) => setFormValues({...formValues, emailNotifications: e.target.checked})}
-                                className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                              />
-                            </div>
-                            <div className="ml-3 text-sm">
-                              <label htmlFor="emailNotifications" className="font-medium text-gray-700">Email Notifications</label>
-                              <p className="text-gray-500">Receive notifications about file sharing, comments, and updates via email.</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start">
-                            <div className="flex items-center h-5">
-                              <input
-                                id="pushNotifications"
-                                name="pushNotifications"
-                                type="checkbox"
-                                checked={formValues.pushNotifications}
-                                onChange={(e) => setFormValues({...formValues, pushNotifications: e.target.checked})}
-                                className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                              />
-                            </div>
-                            <div className="ml-3 text-sm">
-                              <label htmlFor="pushNotifications" className="font-medium text-gray-700">Push Notifications</label>
-                              <p className="text-gray-500">Receive browser push notifications for important updates.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border-t border-gray-200 pt-6">
-                        <h3 className="text-base font-medium text-gray-900">Language & Regional</h3>
-                        <p className="text-sm text-gray-500 mt-1">Configure your language and timezone preferences.</p>
-                        
-                        <div className="mt-4 space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Language</label>
-                            <div className="mt-2">
-                              <select
-                                name="language"
-                                value={formValues.language}
-                                onChange={handleChange}
-                                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                              >
-                                <option value="English">English</option>
-                                <option value="Spanish">Spanish</option>
-                                <option value="French">French</option>
-                                <option value="German">German</option>
-                                <option value="Chinese">Chinese</option>
-                                <option value="Japanese">Japanese</option>
-                              </select>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Timezone</label>
-                            <div className="mt-2">
-                              <select
-                                name="timezone"
-                                value={formValues.timezone}
-                                onChange={handleChange}
-                                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                              >
-                                <option value="UTC">UTC (Coordinated Universal Time)</option>
-                                <option value="EST">EST (Eastern Standard Time)</option>
-                                <option value="CST">CST (Central Standard Time)</option>
-                                <option value="MST">MST (Mountain Standard Time)</option>
-                                <option value="PST">PST (Pacific Standard Time)</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
+                      <div className="ml-3">
+                        <label htmlFor="emailNotifications" className="font-medium text-gray-700 text-base">Email Notifications</label>
+                        <p className="text-gray-500 text-sm">Receive notifications about file sharing, comments, and updates via email.</p>
                       </div>
                     </div>
-                    <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                      {successMessage && (
-                        <div className="mb-4 text-sm text-green-700 bg-green-100 p-2 rounded">
-                          {successMessage}
-                        </div>
-                      )}
-                      <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
-                      >
-                        Save Preferences
-                      </Button>
+                    
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5">
+                        <input
+                          id="pushNotifications"
+                          name="pushNotifications"
+                          type="checkbox"
+                          checked={formValues.pushNotifications}
+                          onChange={(e) => setFormValues({...formValues, pushNotifications: e.target.checked})}
+                          className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                        />
+                      </div>
+                      <div className="ml-3">
+                        <label htmlFor="pushNotifications" className="font-medium text-gray-700 text-base">Push Notifications</label>
+                        <p className="text-gray-500 text-sm">Receive browser push notifications for important updates.</p>
+                      </div>
                     </div>
                   </div>
-                </form>
-              </div>
+                </div>
+                
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">System Settings</h3>
+                  <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                      <select
+                        name="language"
+                        value={formValues.language}
+                        onChange={handleChange}
+                        className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="English">English</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Japanese">Japanese</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                      <select
+                        name="timezone"
+                        value={formValues.timezone}
+                        onChange={handleChange}
+                        className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="UTC">UTC (Coordinated Universal Time)</option>
+                        <option value="EST">EST (Eastern Standard Time)</option>
+                        <option value="CST">CST (Central Standard Time)</option>
+                        <option value="MST">MST (Mountain Standard Time)</option>
+                        <option value="PST">PST (Pacific Standard Time)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 py-2 px-5 text-base h-auto rounded"
+                  >
+                    Save Preferences
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
           
           {/* Billing Section */}
           {currentTab === "billing" && (
-            <div className="md:grid md:grid-cols-3 md:gap-6">
-              <div className="md:col-span-1">
-                <div className="px-4 sm:px-0">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">Billing & Plans</h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Manage your subscription and view billing history.
-                  </p>
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Subscription & Billing</h2>
+              
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-700">Current Plan</h3>
+                <span className="text-sm font-medium bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                  Free
+                </span>
+              </div>
+              
+              <div className="border border-gray-200 rounded p-4 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-base font-medium text-gray-600">Storage</span>
+                  <span className="text-base font-medium text-gray-900">50 GB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-base font-medium text-gray-600">File Size Limit</span>
+                  <span className="text-base font-medium text-gray-900">100 MB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-base font-medium text-gray-600">Support</span>
+                  <span className="text-base font-medium text-gray-900">Standard</span>
                 </div>
               </div>
               
-              <div className="mt-5 md:mt-0 md:col-span-2">
-                <div className="shadow sm:rounded-md sm:overflow-hidden">
-                  <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
-                    {/* Current Plan */}
-                    <div>
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-base font-medium text-gray-900">Current Plan</h3>
-                        <span className="text-xs font-medium bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                          Free
-                        </span>
-                      </div>
-                      
-                      <div className="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">Storage</span>
-                          <span className="text-sm font-medium text-gray-900">50 GB</span>
-                        </div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-600">File Size Limit</span>
-                          <span className="text-sm font-medium text-gray-900">100 MB</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Support</span>
-                          <span className="text-sm font-medium text-gray-900">Standard</span>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4">
-                        <button 
-                          type="button" 
-                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                          onClick={() => window.parent.postMessage({ type: 'SHOW_UPGRADE_MODAL' }, '*')}
-                        >
-                          Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Billing History */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-base font-medium text-gray-900">Billing History</h3>
-                      <p className="text-sm text-gray-500 mt-1">View your recent billing history and download invoices.</p>
-                      
-                      <div className="mt-4">
-                        <div className="border border-gray-200 rounded-md overflow-hidden">
-                          <div className="bg-gray-50 px-4 py-2 text-sm font-medium text-gray-500">
-                            No billing history available
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Payment Methods */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-base font-medium text-gray-900">Payment Methods</h3>
-                      <p className="text-sm text-gray-500 mt-1">Add or update your payment methods.</p>
-                      
-                      <div className="mt-4">
-                        <button 
-                          type="button" 
-                          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                        >
-                          <svg className="mr-2 -ml-1 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Add Payment Method
-                        </button>
-                      </div>
-                    </div>
+              <div className="mt-4">
+                <button 
+                  type="button" 
+                  className="w-full flex justify-center py-2 px-4 border border-purple-500 rounded text-base font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  onClick={() => window.parent.postMessage({ type: 'SHOW_UPGRADE_MODAL' }, '*')}
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <h3 className="text-lg font-medium text-gray-700 mb-4">Billing History</h3>
+                
+                <div className="border border-gray-200 rounded overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-3 text-center text-sm text-gray-500">
+                    No billing history available for free plan.
                   </div>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-medium text-gray-700 mb-4">Payment Methods</h3>
+                
+                <div className="border border-gray-200 rounded overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-3 text-center text-sm text-gray-500">
+                    No payment methods added.
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <button 
+                    type="button" 
+                    className="flex justify-center py-2 px-4 border border-gray-300 rounded text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  >
+                    Add Payment Method
+                  </button>
                 </div>
               </div>
             </div>
           )}
         </div>
       </main>
+
+      {/* Two-Factor Authentication Dialog */}
+      {showTwoFactorDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 py-4">
+            <div className="px-6 pb-4 pt-2">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">Set Up Two-Factor Authentication</h3>
+                <button 
+                  type="button" 
+                  className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5"
+                  onClick={handleTwoFactorCancel}
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-5">
+                <p className="text-sm text-gray-600">
+                  Scan this QR code with your authenticator app (such as Google Authenticator, Authy, or Microsoft Authenticator).
+                </p>
+                
+                <div className="flex justify-center my-6">
+                  {twoFactorQRCode && (
+                    <img 
+                      src={twoFactorQRCode} 
+                      alt="QR Code for Two-Factor Authentication" 
+                      className="border border-gray-200 rounded"
+                    />
+                  )}
+                </div>
+                
+                <p className="text-sm text-gray-600 mb-4">
+                  After scanning, enter the 6-digit verification code from your authenticator app below:
+                </p>
+                
+                <div className="mb-4">
+                  <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-700 mb-2">
+                    Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    id="twoFactorCode"
+                    maxLength={6}
+                    placeholder="Enter 6-digit code"
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-base"
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  onClick={handleTwoFactorCancel}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  onClick={handleTwoFactorVerify}
+                  disabled={twoFactorCode.length !== 6 || isLoading}
+                >
+                  {isLoading ? "Verifying..." : "Verify & Enable"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

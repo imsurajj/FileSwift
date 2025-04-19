@@ -7,10 +7,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
 // Developer settings
-const ENABLE_AUTH = false; // Toggle this to enable/disable authentication functionality
+const ENABLE_AUTH = true; // Toggle this to enable/disable authentication functionality
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -54,6 +54,20 @@ export default function Navbar() {
     }
     setShowProfileMenu(false);
   };
+
+  // Listen for session update events from settings page
+  useEffect(() => {
+    const handleSessionUpdate = async () => {
+      // Update session data to ensure the navbar shows the latest info
+      console.log("Session update detected - refreshing session data");
+      await update();
+    };
+
+    window.addEventListener('session-update', handleSessionUpdate);
+    return () => {
+      window.removeEventListener('session-update', handleSessionUpdate);
+    };
+  }, [update]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -248,17 +262,6 @@ export default function Navbar() {
                         Dashboard
                       </Link>
                       <Link
-                        href="/dashboard/files"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setShowProfileMenu(false)}
-                        style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
-                      >
-                        <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                        </svg>
-                        My Files
-                      </Link>
-                      <Link
                         href="/dashboard/settings"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setShowProfileMenu(false)}
@@ -418,14 +421,6 @@ export default function Navbar() {
                 style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
               >
                 Dashboard
-              </Link>
-              <Link
-                href="/dashboard/files"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
-              >
-                My Files
               </Link>
               <Link
                 href="/dashboard/settings"

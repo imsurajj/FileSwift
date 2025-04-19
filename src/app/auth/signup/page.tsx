@@ -119,9 +119,22 @@ export default function SignUpPage() {
     setIsLoading(true);
     
     try {
-      // In a real app, this would be a call to your API to create the user
-      // For now, we'll simulate a successful registration and then sign in
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Register the user via our API
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formValues.name,
+          email: formValues.email,
+          password: formValues.password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
       
       // Auto sign-in after registration
       const result = await signIn("credentials", {
@@ -140,7 +153,7 @@ export default function SignUpPage() {
       router.push("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
-      setErrors({ form: "An unexpected error occurred. Please try again." });
+      setErrors({ form: error instanceof Error ? error.message : "An unexpected error occurred. Please try again." });
       setIsLoading(false);
     }
   };

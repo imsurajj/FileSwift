@@ -1,18 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
-
-// Here we could connect to a database to verify credentials
-// For simplicity, we're using a static username/password check
-const users = [
-  {
-    id: "1",
-    name: "Demo User",
-    email: "user@example.com",
-    password: "password123", // In a real app, this would be hashed
-    image: "https://ui-avatars.com/api/?name=Demo+User&background=0D8ABC&color=fff",
-  },
-];
+import { getUserByEmail, verifyPassword } from "./user";
 
 // Add extended Session and User types
 declare module "next-auth" {
@@ -39,19 +28,25 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Here we would typically check against a database
-        const user = users.find(user => user.email === credentials.email);
-        
-        if (user && user.password === credentials.password) {
+        try {
+          // Get user from database
+          const user = await getUserByEmail(credentials.email);
+          
+          // If user not found or password doesn't match
+          if (!user || !(await verifyPassword(credentials.password, user.password))) {
+            return null;
+          }
+          
           return {
             id: user.id,
             name: user.name,
             email: user.email,
             image: user.image,
           };
+        } catch (error) {
+          console.error("Error authenticating user:", error);
+          return null;
         }
-        
-        return null;
       },
     }),
   ],
@@ -80,5 +75,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  debug: process.env.NODE_ENV === "development",
   secret: process.env.NEXTAUTH_SECRET || "this-should-be-a-secret-in-production",
 };
