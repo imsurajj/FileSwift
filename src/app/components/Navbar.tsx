@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
 // Developer settings
-const ENABLE_AUTH = true; // Toggle this to enable/disable authentication functionality
+const ENABLE_AUTH = true; // Authentication is enabled by default for production
 
 export default function Navbar() {
   const { data: session, status, update } = useSession();

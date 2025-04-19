@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import { NextAuthOptions } from "next-auth";
 import { getUserByEmail, verifyPassword } from "./user";
 
@@ -17,6 +19,17 @@ declare module "next-auth" {
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    // GitHub OAuth provider
+    GitHubProvider({
+      clientId: process.env.GITHUB_ID || "",
+      clientSecret: process.env.GITHUB_SECRET || "",
+    }),
+    // Google OAuth provider
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
+    // Credentials provider (email/password)
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -52,10 +65,8 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: "/auth/signin",
-    // signOut: '/auth/signout',
-    // error: '/auth/error',
-    // verifyRequest: '/auth/verify-request',
-    // newUser: '/auth/new-user'
+    signOut: '/auth/signout',
+    error: '/auth/error',
   },
   session: {
     strategy: "jwt",
