@@ -47,17 +47,12 @@ function ErrorContent() {
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           />
         </svg>
-        <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">Authentication Error</h2>
-        <p className="mt-2 text-sm text-gray-600">{errorMessage}</p>
+        <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">Authentication Under Maintenance</h2>
+        <p className="mt-2 text-sm text-gray-600">We are currently working on authentication. Please check back later.</p>
       </div>
       
       <div className="mt-8 space-y-6">
         <div className="flex flex-col gap-3">
-          <Link href="/auth/signin">
-            <Button className="w-full">
-              Return to sign in
-            </Button>
-          </Link>
           <Link href="/">
             <Button variant="outline" className="w-full">
               Return to home
