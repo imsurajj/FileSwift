@@ -5,9 +5,11 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { truncate } from 'node:fs';
+import { usePathname } from 'next/navigation';
 
 // Developer settings
-const ENABLE_AUTH = false; // Authentication is enabled by default for production
+const ENABLE_AUTH = true; // Authentication is enabled by default for production
 
 export default function Navbar() {
   const { data: session, status, update } = useSession();
@@ -16,6 +18,10 @@ export default function Navbar() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const profileHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pathname = usePathname();
+  
+  // Check if we're on a dashboard page
+  const isDashboardPage = pathname?.startsWith('/dashboard');
 
   // For developer mode
   const authStatus = ENABLE_AUTH ? status : (session ? 'authenticated' : 'unauthenticated');
@@ -194,11 +200,12 @@ export default function Navbar() {
               onMouseLeave={handleProfileMouseLeave}
               style={disabledAuthStyle}
             >
+              {/* Only show profile on non-dashboard pages */}
               {authStatus === 'loading' ? (
                 <div className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium animate-pulse">
                   Loading...
                 </div>
-              ) : authStatus === 'authenticated' ? (
+              ) : authStatus === 'authenticated' && !isDashboardPage ? (
                 <div className="relative">
                   <button 
                     ref={profileButtonRef}
@@ -287,6 +294,15 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
+              ) : authStatus === 'authenticated' && isDashboardPage ? (
+                // Just show a sign out button on dashboard pages
+                <button
+                  onClick={handleSignOut}
+                  className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                >
+                  Sign out
+                </button>
               ) : (
                 <Link
                   href={ENABLE_AUTH ? "/auth/signin" : "#"}
@@ -371,7 +387,8 @@ export default function Navbar() {
             </Link>
         </div>
         <div className="pt-4 pb-3 border-b border-gray-200" style={!ENABLE_AUTH ? { opacity: 0.6 } : {}}>
-          {authStatus === 'authenticated' ? (
+          {/* Don't show profile in mobile menu when on dashboard pages */}
+          {authStatus === 'authenticated' && !isDashboardPage ? (
             <div className="flex items-center px-4">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-purple-200 flex items-center justify-center">
@@ -395,7 +412,7 @@ export default function Navbar() {
                 <div className="text-sm font-medium text-gray-500">{session?.user?.email}</div>
               </div>
             </div>
-          ) : (
+          ) : authStatus !== 'authenticated' ? (
             <div className="px-4">
               <Link
                 href={ENABLE_AUTH ? "/auth/signin" : "#"}
@@ -411,25 +428,29 @@ export default function Navbar() {
                 Sign in
               </Link>
             </div>
-          )}
+          ) : null}
           {authStatus === 'authenticated' && (
             <div className="mt-3 px-2 space-y-1">
-              <Link
-                href="/dashboard"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              {!isDashboardPage && (
+                <Link
+                  href="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  onClick={() => setIsMenuOpen(false)}
+                  style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                >
+                  Dashboard
+                </Link>
+              )}
+              {!isDashboardPage && (
+                <Link
+                  href="/dashboard/settings"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
-                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/dashboard/settings"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-                style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
-              >
-                Settings
-              </Link>
+                  style={!ENABLE_AUTH ? { cursor: 'not-allowed' } : {}}
+                >
+                  Settings
+                </Link>
+              )}
               <button
                 onClick={() => {
                   handleSignOut();
