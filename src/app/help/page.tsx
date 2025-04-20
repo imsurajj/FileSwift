@@ -165,7 +165,7 @@ export default function HelpPage() {
       <button
           onClick={() => HELP_PAGE_CONFIG.enableChat && setChatOpen(true)}
           className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-colors z-50 ${
-            HELP_PAGE_CONFIG.enableChat ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 opacity-90 pointer-events-none'
+            HELP_PAGE_CONFIG.enableChat ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 opacity-90 cursor-not-allowed'
           }`}
       >
         <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

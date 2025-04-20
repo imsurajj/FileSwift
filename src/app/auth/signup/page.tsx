@@ -15,7 +15,7 @@ const AUTH_CONFIG = {
   },
   providers: {
     github: {
-      enabled: true,
+      enabled: false,
       name: "GitHub",
       icon: (
         <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -24,7 +24,7 @@ const AUTH_CONFIG = {
       ),
     },
     google: {
-      enabled: true,
+      enabled: false,
       name: "Google",
       icon: (
         <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
