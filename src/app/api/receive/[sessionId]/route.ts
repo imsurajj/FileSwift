@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveTempFile } from '@/utils/tempStorage';
-import { activeSessions } from '@/utils/receiveSessionStorage';
+import { activeSessions, sessionExists } from '@/utils/receiveSessionStorage';
 import { storeReceivedFile } from '@/utils/receiveStorage';
 
 export async function POST(
@@ -11,10 +11,17 @@ export async function POST(
     const { sessionId } = params;
     
     // Check if the session exists
-    if (!activeSessions[sessionId]) {
+    if (!sessionExists(sessionId)) {
       return NextResponse.json(
         { error: 'Invalid or expired receive session' },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
       );
     }
     
@@ -38,11 +45,17 @@ export async function POST(
     // Store the file in the receiver's session
     storeReceivedFile(sessionId, file.name, fileUrl);
     
+    // Add cache control headers to prevent caching
+    const headers = new Headers();
+    headers.append('Cache-Control', 'no-cache, no-store, must-revalidate');
+    headers.append('Pragma', 'no-cache');
+    headers.append('Expires', '0');
+    
     return NextResponse.json({ 
       url: fileUrl,
       originalName: file.name,
       receivedBy: sessionId
-    });
+    }, { headers });
   } catch (error) {
     console.error('Upload to receiver error:', error);
     return NextResponse.json(

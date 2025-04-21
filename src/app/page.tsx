@@ -107,6 +107,16 @@ function FileTransfer() {
       if (storedFiles) {
         setReceivedFiles(JSON.parse(storedFiles))
       }
+      
+      // Restore active session if it exists
+      const storedSessionId = localStorage.getItem('current_receive_session');
+      const storedReceiveUrl = localStorage.getItem('current_receive_url');
+      
+      if (storedSessionId && storedReceiveUrl) {
+        setReceiveSession(storedSessionId);
+        setReceiveUrl(storedReceiveUrl);
+        setSessionActive(true);
+      }
     }
   }, [])
 
@@ -142,14 +152,36 @@ function FileTransfer() {
       if (!receiveSession) return;
       
       setCheckingFiles(true);
-      const response = await fetch(`/api/receive/check/${receiveSession}`);
+      const response = await fetch(`/api/receive/check/${receiveSession}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
+      });
       
       if (!response.ok) {
         if (response.status === 404) {
           // Session has expired or been closed
           setSessionActive(false);
+          // Clear localStorage in case of expired session
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('current_receive_session');
+            localStorage.removeItem('current_receive_url');
+          }
+          showNotification('error', 'Session has expired or been closed');
+          
+          // Clear interval
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          
+          setReceiveSession('');
+          setReceiveUrl('');
+        } else {
+          console.error('Failed to check for files:', await response.text());
         }
-        console.error('Failed to check for files:', await response.text());
         return;
       }
       
@@ -179,6 +211,8 @@ function FileTransfer() {
       }
     } catch (error) {
       console.error('Error checking for files:', error);
+      // Don't automatically clear session on network errors
+      // to handle temporary connection issues
     } finally {
       setCheckingFiles(false);
     }
@@ -268,21 +302,47 @@ function FileTransfer() {
   
   const startReceiveSession = async () => {
     setLoadingReceive(true)
+    setError('')
     try {
+      // Check if we're in a deployed environment
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                         window.location.hostname !== 'localhost';
+      
+      // Create a receive session via API
       const response = await fetch('/api/receive', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        // Add timestamp to prevent caching
+        cache: 'no-store'
       })
       
       if (!response.ok) {
-        throw new Error('Failed to create receive session')
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        throw new Error('Failed to create receive session');
       }
       
       const data = await response.json()
+      
+      // Store session data in localStorage for persistence
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('current_receive_session', data.sessionId);
+        localStorage.setItem('current_receive_url', data.url);
+      }
+      
       setReceiveSession(data.sessionId)
       setReceiveUrl(data.url)
+      setSessionActive(true)
       showNotification('success', 'Receive session created! Waiting for files...')
+      
+      // Start checking for files
+      checkForNewFiles();
     } catch (error) {
       console.error('Failed to create receive session:', error)
+      setError('Failed to create receive session. Please try again.')
       showNotification('error', 'Failed to create receive session. Please try again.')
     } finally {
       setLoadingReceive(false)
@@ -300,8 +360,10 @@ function FileTransfer() {
       const response = await fetch(`/api/receive/close/${receiveSession}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
       });
       
       if (!response.ok) {
@@ -314,6 +376,13 @@ function FileTransfer() {
       setReceiveSession('');
       setReceiveUrl('');
       setSessionActive(false);
+      
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('current_receive_session');
+        localStorage.removeItem('current_receive_url');
+      }
+      
       showNotification('success', 'Receive session closed successfully!');
       
       if (intervalRef.current) {
@@ -327,6 +396,12 @@ function FileTransfer() {
       setReceiveSession('');
       setReceiveUrl('');
       setSessionActive(false);
+      
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('current_receive_session');
+        localStorage.removeItem('current_receive_url');
+      }
       
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
