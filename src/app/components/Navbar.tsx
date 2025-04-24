@@ -9,7 +9,7 @@ import { truncate } from 'node:fs';
 import { usePathname } from 'next/navigation';
 
 // Developer settings
-const ENABLE_AUTH = false; // Authentication is enabled by default for production
+const ENABLE_AUTH = true; // Authentication is enabled by default for production
 
 export default function Navbar() {
   const { data: session, status, update } = useSession();
