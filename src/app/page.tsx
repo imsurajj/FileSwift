@@ -11,6 +11,7 @@ import Navbar from './components/Navbar'
 import ToggleSwitch from './components/ToggleSwitch'
 import PreviewModal from './components/PreviewModal'
 import { useSearchParams, useRouter } from 'next/navigation'
+import DevOverlay from './components/DevOverlay'
 
 // List of all previewable file extensions
 const PREVIEWABLE_EXTENSIONS = [
@@ -38,16 +39,19 @@ interface ReceivedFile {
 
 export default function Home() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-purple-500 border-r-2 border-purple-500 border-b-2 border-transparent"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+    <>
+      <DevOverlay />
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-purple-500 border-r-2 border-purple-500 border-b-2 border-transparent"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <FileTransfer />
-    </Suspense>
+      }>
+        <FileTransfer />
+      </Suspense>
+    </>
   )
 }
 

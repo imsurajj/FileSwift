@@ -5,6 +5,8 @@ import "./globals.css";
 import Footer from './components/Footer';
 import AuthContext from "./context/AuthContext";
 import Script from "next/script";
+import { DevModeProvider } from "./context/DevModeContext";
+// import DevModeToggle from "./components/DevModeToggle";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -54,13 +56,16 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} flex flex-col min-h-screen`}>
-        <AuthContext>
-          <div className="flex-grow">
-            {children}
-          </div>
-          <Footer />
-          <Analytics />
-        </AuthContext>
+        <DevModeProvider>
+          {/* <DevModeToggle /> */}
+          <AuthContext>
+            <div className="flex-grow">
+              {children}
+            </div>
+            <Footer />
+            <Analytics />
+          </AuthContext>
+        </DevModeProvider>
       </body>
     </html>
   );
