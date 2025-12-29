@@ -15,7 +15,7 @@ export default function UploadPage() {
 
     const [file, setFile] = useState<File | null>(null)
     const [uploading, setUploading] = useState(false)
-    const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+    const [uploadSuccess, setUploadSuccess] = useState(false)
 
     const handleUpload = async () => {
         if (!file) return
@@ -24,6 +24,7 @@ export default function UploadPage() {
         try {
             const formData = new FormData()
             formData.append('file', file)
+            formData.append('sessionId', sessionId) // Include session ID for receive workflow
 
             const response = await fetch('/api/upload', {
                 method: 'POST',
@@ -34,21 +35,13 @@ export default function UploadPage() {
                 throw new Error('Upload failed')
             }
 
-            const data = await response.json()
-            setDownloadUrl(data.downloadUrl)
-            toast.success("File uploaded successfully!")
+            setUploadSuccess(true)
+            toast.success("File sent to receiver successfully!")
         } catch (error) {
             console.error(error)
-            toast.error("Failed to upload file")
+            toast.error("Failed to send file")
         } finally {
             setUploading(false)
-        }
-    }
-
-    const copyLink = () => {
-        if (downloadUrl) {
-            navigator.clipboard.writeText(downloadUrl)
-            toast.success("Download link copied!")
         }
     }
 
@@ -65,14 +58,14 @@ export default function UploadPage() {
                 <CardContent className="p-4 space-y-4">
                     <div className="text-center">
                         <h2 className="text-lg font-semibold">
-                            {downloadUrl ? "Upload Complete!" : "Upload a File"}
+                            {uploadSuccess ? "File Sent!" : "Send a File"}
                         </h2>
                         <p className="text-xs text-muted-foreground mt-1">
                             Session: {sessionId}
                         </p>
                     </div>
 
-                    {!downloadUrl ? (
+                    {!uploadSuccess ? (
                         <>
                             <FileDropzone
                                 onFileSelect={setFile}
@@ -89,15 +82,15 @@ export default function UploadPage() {
                                 {uploading ? (
                                     <>
                                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                                        Uploading...
+                                        Sending...
                                     </>
                                 ) : (
-                                    "Upload File"
+                                    "Send File to Receiver"
                                 )}
                             </Button>
 
                             <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-center text-blue-600">
-                                Your file will be uploaded to secure cloud storage
+                                File will be sent directly to the receiver
                             </div>
                         </>
                     ) : (
@@ -106,32 +99,19 @@ export default function UploadPage() {
                                 <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
                                     <CheckCircle className="w-8 h-8 text-green-500" />
                                 </div>
-                                <p className="text-sm font-medium">File Uploaded Successfully!</p>
+                                <p className="text-sm font-medium">File Sent Successfully!</p>
                                 <p className="text-xs text-muted-foreground text-center px-4">
-                                    Share this download link with the receiver
+                                    The receiver can now see and download your file
                                 </p>
                             </div>
-
-                            <div className="p-3 rounded-lg bg-muted border">
-                                <p className="text-xs font-mono break-all">{downloadUrl}</p>
-                            </div>
-
-                            <Button
-                                size="default"
-                                variant="default"
-                                className="w-full"
-                                onClick={copyLink}
-                            >
-                                Copy Download Link
-                            </Button>
 
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 className="w-full"
-                                onClick={() => { setFile(null); setDownloadUrl(null); }}
+                                onClick={() => { setFile(null); setUploadSuccess(false); }}
                             >
-                                Upload Another
+                                Send Another File
                             </Button>
                         </div>
                     )}

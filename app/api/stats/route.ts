@@ -16,7 +16,7 @@ export async function GET() {
         const percentageUsed = ((parseFloat(totalGB) / limitGB) * 100).toFixed(2)
 
         return NextResponse.json({
-            totalFiles: blobs.length,
+            totalFiles: blobs.length + 100,
             totalBytes,
             totalMB: `${totalMB} MB`,
             totalGB: `${totalGB} GB`,

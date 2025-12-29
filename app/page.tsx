@@ -19,10 +19,12 @@ export default function Home() {
 
   // Receive State
   const [receiveSessionId, setReceiveSessionId] = useState<string | null>(null)
+  const [receivedFiles, setReceivedFiles] = useState<any[]>([])
+  const [loadingFiles, setLoadingFiles] = useState(false)
 
   // Stats State
-  const [totalFiles, setTotalFiles] = useState<number>(0)
-  const [totalGB, setTotalGB] = useState<string>("0 GB")
+  const [totalFiles, setTotalFiles] = useState<number>(943)
+  const [totalMB, setTotalMB] = useState<string>("8462 MB")
 
   // Fetch total GB transferred
   const fetchStats = async () => {
@@ -31,7 +33,7 @@ export default function Home() {
       if (response.ok) {
         const data = await response.json()
         setTotalFiles(data.totalFiles || 0)
-        setTotalGB(data.totalGB || "0 GB")
+        setTotalMB(data.totalMB || "0 MB")
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error)
@@ -83,6 +85,37 @@ export default function Home() {
     toast.success("Receive link created!")
   }
 
+  // Fetch received files for current session
+  const fetchReceivedFiles = async (sessionId: string) => {
+    setLoadingFiles(true)
+    try {
+      const response = await fetch(`/api/session-files?sessionId=${sessionId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setReceivedFiles(data.files || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch received files:', error)
+    } finally {
+      setLoadingFiles(false)
+    }
+  }
+
+  // Poll for received files when session is active
+  useEffect(() => {
+    if (receiveSessionId) {
+      // Fetch immediately
+      fetchReceivedFiles(receiveSessionId)
+
+      // Then poll every 3 seconds
+      const interval = setInterval(() => {
+        fetchReceivedFiles(receiveSessionId)
+      }, 3000)
+
+      return () => clearInterval(interval)
+    }
+  }, [receiveSessionId])
+
   const resetSend = () => {
     setFile(null)
     setShareUrl(null)
@@ -90,6 +123,7 @@ export default function Home() {
 
   const resetReceive = () => {
     setReceiveSessionId(null)
+    setReceivedFiles([])
   }
 
   return (
@@ -107,14 +141,14 @@ export default function Home() {
           {/* Total Data Transferred Badge */}
           <Badge variant="secondary" className="flex items-center gap-1.5">
             <Send className="w-3 h-3" />
-            <span className="text-xs font-medium">{totalFiles.toLocaleString()} files • {totalGB}</span>
+            <span className="text-xs font-medium">{totalFiles.toLocaleString()} files • {totalMB}</span>
           </Badge>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-2xl">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold mb-2">Send/Receive Files Instantly</h1>
+          <h1 className="text-3xl font-bold mb-2">Send or Receive Files Instantly</h1>
           <p className="text-sm text-muted-foreground">
             Send files or create a receive link • 100% Free
           </p>
@@ -230,22 +264,60 @@ export default function Home() {
                     <ShareDisplay
                       url={`${window.location.origin}/upload/${receiveSessionId}`}
                       title="Receive Link Ready"
-                      description="Share this link and others can upload files to you"
+                      description="Share this link for others to send you files"
                     />
 
-                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-center">
-                      <p className="text-blue-600 font-medium">📥 Ready to receive files!</p>
-                      <p className="text-blue-600/80 mt-1">
-                        Files will be uploaded and you'll get the download links
-                      </p>
-                    </div>
+                    {receivedFiles.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold">Received Files ({receivedFiles.length})</h3>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchReceivedFiles(receiveSessionId!)}
+                            disabled={loadingFiles}
+                          >
+                            {loadingFiles ? (
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
 
-                    <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs text-center">
-                      <p className="text-orange-600 font-medium">Note: Check this page later</p>
-                      <p className="text-orange-600/80 mt-1">
-                        After someone uploads, they'll get a download link to share with you
-                      </p>
-                    </div>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {receivedFiles.map((file: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between p-3 rounded-lg border-2 border-primary/20 bg-primary/5">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="p-2 rounded-md bg-primary/10">
+                                  <Download className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium truncate">{file.filename || file.pathname}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => window.open(file.downloadUrl, '_blank')}
+                              >
+                                Download
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+                        <p className="text-blue-600 text-sm font-medium">📥 Waiting for files...</p>
+                        <p className="text-blue-600/80 text-xs mt-1">
+                          Files will appear here automatically
+                        </p>
+                      </div>
+                    )}
 
                     <Button variant="ghost" size="sm" className="w-full" onClick={resetReceive}>
                       Create new session
